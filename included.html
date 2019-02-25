@@ -1,0 +1,79 @@
+<html>
+<body>
+	<script>
+
+	    // Wait for Twine to load the 'tw-passage' element
+	    function waitForTwine() {
+
+	    	// Get the iframe
+			var iframe = document.getElementById("webframe");
+			// Get its document object
+			var iframeDocument = iframe.contentWindow.document;
+			// Get the passage, if it exists
+	    	var passage = iframeDocument.querySelector("tw-passage");
+
+	    	// If the passage doesn't exist, loop again
+	    	if(passage == null) {
+
+				// Wait for default 4ms before trying again
+	    		window.setTimeout(testForStory);
+
+	    	} else {
+	    		// Everything is now ready!
+	    		frameReady();
+
+	    	}
+
+	    }
+
+		function frameReady() {
+
+			// Save ipcRenderer
+			const { ipcRenderer } = require('electron');
+
+			// Get the iframe
+			var iframe = document.getElementById("webframe");
+			// Get its document object
+			var iframeDocument = iframe.contentWindow.document;
+			// Get the passage
+			var passage = iframeDocument.querySelector("tw-passage");
+
+			console.log(passage.innerText);
+
+
+			ipcRenderer.on('async-message-remote', function(event, arg) {
+			  console.log(arg); // prints "pong"
+			});
+
+			iframeDocument.addEventListener("click", function() {
+				ipcRenderer.send('async-message-main', 'ping');
+			}, false);
+
+		}
+
+		function checkLoaded() {
+
+			// Get the frame element
+			var iframeLocal = document.getElementById("webframe");
+
+		    // Get a reference to the iframe element document
+		    var iframeDoc = iframeLocal.contentDocument || iframeLocal.contentWindow.document;
+
+		    // Check if loading is complete
+		    if (  iframeDoc.readyState  == 'complete' ) {
+		        
+		        // Once the frame has loaded, 
+		        //  double-check that Twine is loaded
+				waitForTwine();
+
+		    } 
+
+		    // Check again in default 4 ms
+		    window.setTimeout(checkLoaded);
+		}
+
+	</script>
+	<iframe id="webframe" src="index.html" style="position:fixed; top:0; left:0; bottom:0; right:0; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden; z-index:999999;" onload="checkLoaded();">
+	</iframe>
+</body>
+</html>

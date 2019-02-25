@@ -1,0 +1,20 @@
+{
+  "name": "passage-shell",
+  "version": "1.0.0",
+  "description": "Passage Shell is a browser shell for running Twine projects remotely either locally or over a server.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "repository": "",
+  "keywords": [
+    "Electron",
+    "Twine"
+  ],
+  "author": "Dan Cox",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^4.0.4",
+    "express": "^4.16.4"
+  }
+}

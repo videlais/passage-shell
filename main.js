@@ -6,31 +6,41 @@ const express = require('express');
 const webApp = express();
 const port = 3000;
 
-let textContents = "";
+let textContents;
+let htmlContents;
+let linksContents;
+let statusContents;
 
 webApp.get('/', function(req, res) {
-  res.send('Status');
+  res.json({"status": 'The file is loaded. Visit /text for the current text and /html for the html'});
 });
 
-webApp.get('/plaintext', function(req, res) {
-  res.send(textContents);
+webApp.get('/text', function(req, res) {
+  res.json({"text": textContents});
 });
 
 webApp.get('/html', function(req, res) {
-  res.send('HTML!');
+  res.json({"html": htmlContents});
+});
+
+webApp.get('/links', function(req, res) {
+  res.json({"links": linksContents});
 });
 
 webApp.get('/click/:id', function(req, res) {
-  res.send('click ' + req.params.id);
+  res.json({"click" : req.params.id});
+  // Send to the renderer to click the number
+  webContents.send('async-remote-click', req.params.id);
 });
 
 webApp.listen(port, function() {
-  console.log(`Server working!`);
+  console.log(`Server loaded!`);
 });
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
+let webContents;
 
 function createWindow () {
   // Create the browser window.
@@ -45,6 +55,9 @@ function createWindow () {
 
   // and load the index.html of the app.
   mainWindow.loadFile('included.html');
+
+  // Save a reference to webContents
+  webContents = mainWindow.webContents;
 
   // Open the DevTools for testing purposes
   // Remove this later
@@ -83,17 +96,26 @@ app.on('activate', function () {
 });
 
 
-// Listen on the "main" channel for events
-ipcMain.on('async-message-main', function(event, arg) {
-  console.log(arg); // prints "ping"
+// Listen for the 'main' events
+// 'html': The HTML content
+// 'text': The text content
+// 'links': The links content
+// 'status': The status content
+
+// Listen on the "async" channel for events
+ipcMain.on('async-main-html', function(event, arg) {
+  htmlContents = arg;
 });
 
-ipcMain.on('async-message-main-plain', function(event, arg) {
+ipcMain.on('async-main-text', function(event, arg) {
   textContents = arg;
-  console.log(textContents);
 });
 
+ipcMain.on('async-main-links', function(event, arg) {
+  linksContents = arg;
+});
 
-
-
+ipcMain.on('async-main-status', function(event, arg) {
+  statusContents = arg;
+});
 

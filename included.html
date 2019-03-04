@@ -16,7 +16,7 @@
 	    	if(passage == null) {
 
 				// Wait for default 4ms before trying again
-	    		window.setTimeout(testForStory);
+	    		window.setTimeout(waitForTwine);
 
 	    	} else {
 	    		// Everything is now ready!
@@ -28,52 +28,81 @@
 
 		function frameReady() {
 
-			// Save ipcRenderer
-			const { ipcRenderer } = require('electron');
-
 			// Get the iframe
 			var iframe = document.getElementById("webframe");
 			// Get its document object
 			var iframeDocument = iframe.contentWindow.document;
-			// Get the passage
-			var passage = iframeDocument.querySelector("tw-passage");
-
-			console.log(passage.innerText);
 
 
-			ipcRenderer.on('async-message-remote', function(event, arg) {
-			  console.log(arg); // prints "pong"
+			// TODO:
+			// Look for the tw-storydata element
+			// Pull out the story format, version, etc
+			// Send it to the 'status' (/) variable
+
+			// Save ipcRenderer
+			const { ipcRenderer } = require('electron');
+
+			function refresh() {
+
+				// Get the passage
+				var passage = iframeDocument.querySelector("tw-passage");
+
+				// Send text content
+				ipcRenderer.send('async-main-text', passage.innerText);
+				// Send HTML content
+				ipcRenderer.send('async-main-html', passage.innerHTML);
+
+				// Create empty links
+				var linksArray = [];
+				var linksResults = iframeDocument.querySelectorAll("tw-link");
+
+				// Parse all the links in the document
+				for(var i = 0; 
+					i < linksResults.length;
+					i++) {
+					linksArray.push({
+						"text": linksResults[i].innerText,
+						"tagName": linksResults[i].tagName
+					});
+				}
+
+				// Send links content
+				ipcRenderer.send('async-main-links', linksArray);
+
+			}
+
+			// Send the first update
+			refresh();
+
+			ipcRenderer.on('async-remote-click', function(event, arg) {
+				// arg will be number to click
+				var linksResults = iframeDocument.querySelectorAll("tw-link");
+
+				// Do a sanity check
+				// 	arg should be greater than 0
+				// 	arg should be less than number of results
+				//	results should be more than 0
+				if(arg >= 0 && arg < linksResults.length && linksResults.length > 0) {
+
+					var event = new MouseEvent('click', {
+					    view: window,
+					    bubbles: true,
+					    cancelable: true
+					});
+
+					// Click the tw-link
+					linksResults[arg].dispatchEvent(event);
+
+					refresh();
+
+				}
+
 			});
 
-			iframeDocument.addEventListener("click", function() {
-				ipcRenderer.send('async-message-main', 'ping');
-			}, false);
-
-		}
-
-		function checkLoaded() {
-
-			// Get the frame element
-			var iframeLocal = document.getElementById("webframe");
-
-		    // Get a reference to the iframe element document
-		    var iframeDoc = iframeLocal.contentDocument || iframeLocal.contentWindow.document;
-
-		    // Check if loading is complete
-		    if (  iframeDoc.readyState  == 'complete' ) {
-		        
-		        // Once the frame has loaded, 
-		        //  double-check that Twine is loaded
-				waitForTwine();
-
-		    } 
-
-		    // Check again in default 4 ms
-		    window.setTimeout(checkLoaded);
 		}
 
 	</script>
-	<iframe id="webframe" src="index.html" style="position:fixed; top:0; left:0; bottom:0; right:0; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden; z-index:999999;" onload="checkLoaded();">
+	<iframe id="webframe" src="index.html" style="position:fixed; top:0; left:0; bottom:0; right:0; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden; z-index:999999;" onload="waitForTwine();">
 	</iframe>
 </body>
 </html>

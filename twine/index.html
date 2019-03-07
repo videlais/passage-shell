@@ -1,0 +1,228 @@
+<html>
+<body>
+	<script>
+
+		// Load the electron module with the ipcRenderer object
+		const { ipcRenderer } = require('electron');
+
+		// Create a global that will store the status
+		var story = {
+			format: "",
+			formatVersion: "",
+			name: "",
+			creator: "",
+			creatorVersion: ""
+		};
+
+		// More global linksArray that will be 
+		//  re-populated after each detected 'click'
+		var linksArray = [];
+
+	    // Wait for Twine to load the <tw-storydata> element
+	    function waitForTwine() {
+
+	    	// Get the iframe
+			var iframe = document.getElementById("webframe");
+			// Get its document object
+			var iframeDocument = iframe.contentWindow.document;
+			// Find the <tw-storydata> element and populate its data
+			var storydata = iframeDocument.querySelector("tw-storydata");
+
+			// If there is not a <tw-storydata> element,
+			//  something is very wrong. Stop everything.
+			if(storydata == null) {
+				ipcRenderer.send('async-main-status', {"error": "Not a Twine file!"});
+				return;
+			}
+
+			// There was a <tw-storydata> element, populate.
+			story.format = storydata.getAttribute("format");
+			story.formatVerison = storydata.getAttribute("format-version");
+			story.creator = storydata.getAttribute("creator");
+			story.creatorVersion = storydata.getAttribute("creator-version");
+			story.name = storydata.getAttribute("name");
+
+			// Send the status
+			ipcRenderer.send('async-main-status', story);
+
+			// Set the default
+			var passage = null;
+
+			// Wait for Twine to load its passages
+			// (We have to wait per story format.)
+			if(story.format == "Harlowe") {
+				// Check for Harlowe
+				passage = iframeDocument.querySelector("tw-passage");
+
+			} else if(story.format == "SugarCube") {
+				// Check for SugarCube
+				passage = iframeDocument.querySelector("#passages");
+
+			} else if(story.format == "Snowman") {
+				// Check for Snowman
+				passage = iframeDocument.querySelector("#passage");
+
+			} else {
+				// If it is not Harlowe, SugarCube, or Snowman,
+				//  stop everything.
+				ipcRenderer.send('async-main-status', {"error": "Not a valid story format!"});
+				return;
+			}
+
+	    	// If it doesn't exist, loop again
+	    	if(passage == null) {
+
+				// Wait for default 4ms before trying again
+	    		window.setTimeout(waitForTwine);
+
+	    	} else {
+	    		// Everything is now ready!
+	    		frameReady();
+
+	    	}
+
+	    }
+
+		function frameReady() {
+
+			// Get the iframe (again)
+			var iframe = document.getElementById("webframe");
+			// Get its document object (again)
+			var iframeDocument = iframe.contentWindow.document;
+
+			function refreshLinks() {
+
+				if(story.format == "Harlowe") {
+					// Check for Harlowe
+					passage = iframeDocument.querySelector("tw-passage");
+
+				} else if(story.format == "SugarCube") {
+					// Check for SugarCube
+					passage = iframeDocument.querySelector("#passages");
+
+				} else if(story.format == "Snowman") {
+					// Check for Snowman
+					passage = iframeDocument.querySelector("#passage");
+
+				}
+
+				// Erase previous links before re-populate
+				linksArray = [];
+				// Check for <tw-link> elements
+				var linksResults = passage.querySelectorAll("tw-link");
+				// Check for <a> elements
+				var aLinksResults = passage.querySelectorAll("a");
+
+				// Move through the <a> elements
+				for(var k = 0;
+					k < aLinksResults.length; 
+					k++) {
+
+					linksArray.push({
+						"element": aLinksResults[k],
+						"text": aLinksResults[k].innerText,
+						"tagName": aLinksResults[k].tagName
+					});
+				}
+
+				// Move through the <tw-link> elements
+				for(var i = 0; 
+					i < linksResults.length;
+					i++) {
+
+					linksArray.push({
+						"element": linksResults[i],
+						"text": linksResults[i].innerText,
+						"tagName": linksResults[i].tagName
+					});
+				}
+
+				// Send links content
+				ipcRenderer.send('async-main-links', linksArray);
+
+			}
+
+			function refresh() {
+
+				// Set a default value
+				var passage = null;
+
+				// Get the iframe (again)
+				var iframe = document.getElementById("webframe");
+				// Get its document object (again)
+				var iframeDocument = iframe.contentWindow.document;
+
+				// Check for story format
+				if(story.format == "Harlowe") {
+					// Check for Harlowe
+					passage = iframeDocument.querySelector("tw-passage");
+				} else if(story.format == "SugarCube") {
+					// Check for SugarCube
+					passage = iframeDocument.querySelector("#passages");
+				} else if(story.format == "Snowman") {
+					// Check for Snowman
+					passage = iframeDocument.querySelector("#passage");
+				}
+
+				// Sanity check
+				// (This should never happen, but in case it does.)
+				if(passage == null) {
+					passage = {
+						innerText: "",
+						innerHTML: ""
+					};
+				}
+
+				// Send text content
+				ipcRenderer.send('async-main-text', passage.innerText);
+				// Send HTML content
+				ipcRenderer.send('async-main-html', passage.innerHTML);
+
+				// Refresh the links array
+				refreshLinks();
+
+			}
+
+			// Send the first update
+			refresh();
+
+			ipcRenderer.on('async-remote-click', function(event, arg) {
+
+				// Do a sanity check
+				// 	arg should be greater than 0
+				// 	arg should be less than number of results
+				//	results should be more than 0
+				if(arg >= 0 && 
+				   arg < linksArray.length && 
+				   linksArray.length > 0) {
+
+					var event = new MouseEvent('click', {
+						view: window,
+						bubbles: true,
+						cancelable: true
+					});
+
+					try {
+						// Click the link or link-like element
+						linksArray[arg].element.dispatchEvent(event);
+
+					} catch (event) {
+
+						ipcRenderer.send('async-main-status', {"error": "Could not click link or link-like element!"});
+
+					}
+
+				}
+
+				// Always refresh after a click event
+				refresh();
+
+			});
+
+	}
+
+	</script>
+	<iframe id="webframe" src="index-snowman.html" style="position:fixed; top:0; left:0; bottom:0; right:0; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden; z-index:999999;" onload="waitForTwine();">
+	</iframe>
+</body>
+</html>

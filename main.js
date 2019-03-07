@@ -6,11 +6,19 @@ const fs = require('fs');
 const express = require('express');
 const webApp = express();
 
+// Reference to httpServer returned by Express' listen()
+// This is needed so we can close the server remotely
+let httpServer;
+
 // Set the default values
 let textContents = "";
 let htmlContents = "";
 let linksContents = [];
 let statusContents = {};
+
+// If JSON in settings.json is well-formed, this will be overwritten.
+//  If not, it will be populated with defaults.
+let settings = {}
 
 // Global reference to writeStream
 let writeStream;
@@ -20,7 +28,7 @@ let writeStream;
 let mainWindow;
 let webContents;
 let settingsWindow;
-let settingsWindowContents;
+let settingsWebContents;
 
 function createWindow () {
   // Create the browser window.
@@ -34,8 +42,8 @@ function createWindow () {
   })
 
   settingsWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 400,
+    height: 400,
     webPreferences: {
       nodeIntegration: true
     }
@@ -50,9 +58,12 @@ function createWindow () {
   // Save a reference to webContents
   webContents = mainWindow.webContents;
 
+  // Save a reference to the settings window contents
+  settingsWebContents = settingsWindow.webContents;
+
   // Open the DevTools for testing purposes
   // Remove this later
-  //mainWindow.webContents.openDevTools()
+  //settingsWindow.webContents.openDevTools();
 
   // Emitted when the window is closed. 
   settingsWindow.on('closed', function () {
@@ -66,9 +77,16 @@ function createWindow () {
     writeStream.end();
   });
 
-  // Electron is loaded
-  // Load the express server
-  startServer();
+  // Wait for the settings window to load
+  settingsWebContents.on('did-finish-load', () => {
+    
+    // Electron is loaded
+    // SettingsWindow is loaded
+    // MainWindow is loading
+    // Time to load the express server
+    startServer();
+
+  });  
 
 }
 
@@ -80,9 +98,6 @@ function startServer() {
 
     // Load the settings.json file
     var contents = fs.readFileSync("settings.json");
-    // If JSON is well-formed, this will be overwritten.
-    //  If not, well, we need to populate this with defaults.
-    var settings = {}
 
     try {
       
@@ -91,7 +106,7 @@ function startServer() {
 
     } catch (event) {
 
-      // Files was malformed or some other error occured
+      // File was malformed or some other error occured
       console.log("Malformed JSON!");
 
       // Populate the settings object with the defaults
@@ -112,6 +127,9 @@ function startServer() {
     settings.log = "session.log";
 
   }
+
+  // Send the loaded settings to the loader window
+  settingsWebContents.send('async-remote-settings', settings);
 
   // Set the writeStream
   writeStream = fs.createWriteStream(settings.log);
@@ -161,8 +179,8 @@ function startServer() {
     res.status(404).json({"error": "Not a valid route!"});
   })
 
-  webApp.listen(settings.port, function() {
-    console.log('Server loaded!');
+  httpServer = webApp.listen(settings.port, function() {
+    console.log('Server running!');
   });
 
 
@@ -194,6 +212,7 @@ app.on('activate', function () {
 // 'text': text content
 // 'links': links content
 // 'status': status content
+// 'server': switching webserver on and off
 
 // Listen on the "async" channel for events
 ipcMain.on('async-main-html', function(event, arg) {
@@ -211,4 +230,21 @@ ipcMain.on('async-main-links', function(event, arg) {
 ipcMain.on('async-main-status', function(event, arg) {
   statusContents = arg;
 });
+
+ipcMain.on('async-main-server', function(event, arg) {
+  if(arg == "run") {
+
+    httpServer = webApp.listen(settings.port, function() {
+      console.log('Server running!');
+    
+    });
+
+  } else {
+
+    httpServer.close(function() {
+      console.log('Server shutting down!');
+    });
+
+  }
+})
 

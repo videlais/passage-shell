@@ -49,11 +49,20 @@ function createWindow () {
     }
   })
 
-  // Load the loader/settings file
+  // With the windows loading, load the settings
+  loadSettings();
+
+  // Load the loader file
   settingsWindow.loadFile('loader/index.html');
 
-  // Load the Twine interface in the background
-  mainWindow.loadFile('twine/index.html');
+  // Do a sanity check
+  // Does the loader have a folder in the current directory?
+  if(fs.existsSync("./" + settings.loader)) {
+    // Load the interface in the background
+    mainWindow.loadFile(settings.loader + '/index.html');
+  } else {
+    console.log("Loader not found");
+  }
 
   // Save a reference to webContents
   webContents = mainWindow.webContents;
@@ -63,7 +72,7 @@ function createWindow () {
 
   // Open the DevTools for testing purposes
   // Remove this later
-  //settingsWindow.webContents.openDevTools();
+  //mainWindow.webContents.openDevTools();
 
   // Emitted when the window is closed. 
   settingsWindow.on('closed', function () {
@@ -90,7 +99,7 @@ function createWindow () {
 
 }
 
-function startServer() {
+function loadSettings() {
 
   // Sanity check
   // Does the settings file exist?
@@ -111,7 +120,7 @@ function startServer() {
 
       // Populate the settings object with the defaults
       settings.port = 3000;
-      settings.loader = "Twine";
+      settings.loader = "twine";
       settings.log = "session.log";
 
     }
@@ -127,6 +136,10 @@ function startServer() {
     settings.log = "session.log";
 
   }
+
+}
+
+function startServer() {
 
   // Send the loaded settings to the loader window
   settingsWebContents.send('async-remote-settings', settings);
@@ -213,6 +226,7 @@ app.on('activate', function () {
 // 'links': links content
 // 'status': status content
 // 'server': switching webserver on and off
+// 'restart': reload the file
 
 // Listen on the "async" channel for events
 ipcMain.on('async-main-html', function(event, arg) {
@@ -248,3 +262,8 @@ ipcMain.on('async-main-server', function(event, arg) {
   }
 })
 
+ipcMain.on('async-main-restart', function(event, arg) {
+
+
+
+});

@@ -5,23 +5,40 @@
 		// Load the electron module with the ipcRenderer object
 		const { ipcRenderer } = require('electron');
 
+		var story = {
+			name: "",
+			creator: "",
+			author: ""
+		}
+
+		// These will be refreshed each loop
+		var iframe = null;
+		var iframeDocument = null;
+		var story = null;
+		var linksArray = [];
+
 	    // Wait for Twine to load the <tw-storydata> element
 	    function waitForInk() {
 
 	    	// Get the iframe
-			var iframe = document.getElementById("webframe");
+			iframe = document.getElementById("webframe");
 			// Get its document object
-			var iframeDocument = iframe.contentWindow.document;
-			// Find the <tw-storydata> element and populate its data
+			iframeDocument = iframe.contentWindow.document;
 			
-			// Send the status
-			//ipcRenderer.send('async-main-status', story);
+			// If we don't find the ".written-in-ink" class,
+			//  stop everything. This is not an Ink web file!
+			var inkTest = iframeDocument.querySelector(".written-in-ink");
 
-			// TODO
-			// Figure out what to watch for to see if it is loaded and ready
+			if(inkTest == null) {
+				ipcRenderer.send('async-main-status', {"error": "This is not an Ink file!"});
+				return;
+			}
+
+			// Check for the #story element
+			story = iframeDocument.querySelector("#story");
 
 	    	// If it doesn't exist, loop again
-	    	/*if(passage == null) {
+	    	if(story == null) {
 
 				// Wait for default 4ms before trying again
 	    		window.setTimeout(waitForInk);
@@ -30,20 +47,32 @@
 	    		// Everything is now ready!*/
 	    		frameReady();
 
-	    	//}
+	    	}
 
 	    }
 
 		function frameReady() {
 
 			// Get the iframe (again)
-			var iframe = document.getElementById("webframe");
+			iframe = document.getElementById("webframe");
 			// Get its document object (again)
-			var iframeDocument = iframe.contentWindow.document;
+			iframeDocument = iframe.contentWindow.document;
+
+			story = iframeDocument.querySelector("#story");
 
 			function refreshLinks() {
 
-				var linksArray = []
+				linksArray = [];
+
+				// Get the iframe (again)
+				iframe = document.getElementById("webframe");
+				// Get its document object (again)
+				iframeDocument = iframe.contentWindow.document;
+				// Get the story again
+				story = iframeDocument.querySelector("#story");
+
+				// Get all of the <a>
+				linksArray = story.querySelectorAll("a");
 
 				// Send links content
 				ipcRenderer.send('async-main-links', linksArray);
@@ -56,14 +85,27 @@
 				var passage = null;
 
 				// Get the iframe (again)
-				var iframe = document.getElementById("webframe");
+				iframe = document.getElementById("webframe");
 				// Get its document object (again)
-				var iframeDocument = iframe.contentWindow.document;
+				iframeDocument = iframe.contentWindow.document;
+				// Get the story again
+				story = iframeDocument.querySelector("#story");
+
+				// Ink keeps the header inside of the story, so
+				//  we parse the paragraphs *inside* the story.
+				var ps = story.querySelectorAll("p");
+				// Create a temporary element
+				var passage = document.createElement("div");
+
+				for(var i = 0; i < ps.length; i++) {
+					// Add back each element
+					passage.appendChild(ps[i]);
+				}
 
 				// Send text content
-				//ipcRenderer.send('async-main-text', passage.innerText);
+				ipcRenderer.send('async-main-text', passage.innerText);
 				// Send HTML content
-				//ipcRenderer.send('async-main-html', passage.innerHTML);
+				ipcRenderer.send('async-main-html', passage.innerHTML);
 
 				// Refresh the links array
 				refreshLinks();

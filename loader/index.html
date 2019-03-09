@@ -46,7 +46,7 @@
 				ipcRenderer.on('async-remote-settings', function(event, arg) {
 
 						$("#settings").html(
-							'<p>Port: ' + arg.port + '</p>' +
+							'<p>Local Port: ' + arg.port + '</p>' +
 							'<p>Loader: ' + arg.loader + '</p>' +
 							'<p>Log: ' + arg.log + '</p>');
 						

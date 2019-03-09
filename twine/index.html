@@ -8,7 +8,7 @@
 		// Create a global that will store the status
 		var story = {
 			format: "",
-			formatVersion: "",
+			formatVerison: "",
 			name: "",
 			creator: "",
 			creatorVersion: ""
@@ -189,7 +189,7 @@
 			ipcRenderer.on('async-remote-click', function(event, arg) {
 
 				// Do a sanity check
-				// 	arg should be greater than 0
+				// 	arg should be greater than or equal to 0
 				// 	arg should be less than number of results
 				//	results should be more than 0
 				if(arg >= 0 && 

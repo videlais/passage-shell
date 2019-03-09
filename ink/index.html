@@ -7,14 +7,14 @@
 
 		var story = {
 			name: "",
-			creator: "",
+			creator: "Ink",
 			author: ""
 		}
 
 		// These will be refreshed each loop
 		var iframe = null;
 		var iframeDocument = null;
-		var story = null;
+		var storydata = null;
 		var linksArray = [];
 
 	    // Wait for Twine to load the <tw-storydata> element
@@ -35,10 +35,10 @@
 			}
 
 			// Check for the #story element
-			story = iframeDocument.querySelector("#story");
+			storydata = iframeDocument.querySelector("#story");
 
 	    	// If it doesn't exist, loop again
-	    	if(story == null) {
+	    	if(storydata == null) {
 
 				// Wait for default 4ms before trying again
 	    		window.setTimeout(waitForInk);
@@ -58,7 +58,16 @@
 			// Get its document object (again)
 			iframeDocument = iframe.contentWindow.document;
 
-			story = iframeDocument.querySelector("#story");
+			// Pull the name of the story from its title
+			story.name = iframeDocument.querySelector("title").innerText;
+
+			// Put the author from the element with the "byline" class
+			story.author = iframeDocument.querySelector(".byline").innerText
+
+			// Send the status
+			ipcRenderer.send('async-main-status', story);
+
+			storydata = iframeDocument.querySelector("#story");
 
 			function refreshLinks() {
 
@@ -69,10 +78,22 @@
 				// Get its document object (again)
 				iframeDocument = iframe.contentWindow.document;
 				// Get the story again
-				story = iframeDocument.querySelector("#story");
+				storydata = iframeDocument.querySelector("#story");
 
 				// Get all of the <a>
-				linksArray = story.querySelectorAll("a");
+				var aLinksResults = storydata.querySelectorAll("a");
+
+				// Move through the <a> elements
+				for(var k = 0;
+					k < aLinksResults.length; 
+					k++) {
+
+					linksArray.push({
+						"element": aLinksResults[k],
+						"text": aLinksResults[k].innerText,
+						"tagName": aLinksResults[k].tagName
+					});
+				}
 
 				// Send links content
 				ipcRenderer.send('async-main-links', linksArray);
@@ -89,11 +110,11 @@
 				// Get its document object (again)
 				iframeDocument = iframe.contentWindow.document;
 				// Get the story again
-				story = iframeDocument.querySelector("#story");
+				storydata = iframeDocument.querySelector("#story");
 
 				// Ink keeps the header inside of the story, so
 				//  we parse the paragraphs *inside* the story.
-				var ps = story.querySelectorAll("p");
+				var ps = storydata.querySelectorAll("p");
 				// Create a temporary element
 				var passage = document.createElement("div");
 
@@ -101,6 +122,9 @@
 					// Add back each element
 					passage.appendChild(ps[i]);
 				}
+
+				// Add them back
+				storydata.appendChild(passage);
 
 				// Send text content
 				ipcRenderer.send('async-main-text', passage.innerText);
@@ -118,7 +142,7 @@
 			ipcRenderer.on('async-remote-click', function(event, arg) {
 
 				// Do a sanity check
-				// 	arg should be greater than 0
+				// 	arg should be greater than or equal to 0
 				// 	arg should be less than number of results
 				//	results should be more than 0
 				if(arg >= 0 && 

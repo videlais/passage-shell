@@ -262,8 +262,3 @@ ipcMain.on('async-main-server', function(event, arg) {
   }
 })
 
-ipcMain.on('async-main-restart', function(event, arg) {
-
-
-
-});

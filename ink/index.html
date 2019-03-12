@@ -5,17 +5,17 @@
 		// Load the electron module with the ipcRenderer object
 		const { ipcRenderer } = require('electron');
 
-		var story = {
+		let story = {
 			name: "",
 			creator: "Ink",
 			author: ""
 		}
 
 		// These will be refreshed each loop
-		var iframe = null;
-		var iframeDocument = null;
-		var storydata = null;
-		var linksArray = [];
+		let iframe = null;
+		let iframeDocument = null;
+		let storydata = null;
+		let linksArray = [];
 
 	    // Wait for Twine to load the <tw-storydata> element
 	    function waitForInk() {
@@ -27,8 +27,10 @@
 			
 			// If we don't find the ".written-in-ink" class,
 			//  stop everything. This is not an Ink web file!
-			var inkTest = iframeDocument.querySelector(".written-in-ink");
+			let inkTest = iframeDocument.querySelector(".written-in-ink");
 
+			// Test if element exists.
+			// If not, stop everything.
 			if(inkTest == null) {
 				ipcRenderer.send('async-main-error', "This is not an Ink file!");
 				return;
@@ -70,24 +72,19 @@
 			// Send that undoing is not possible
 			ipcRenderer.send('async-main-undo', false);
 
+			// Get storydata element
 			storydata = iframeDocument.querySelector("#story");
 
 			function refreshLinks() {
 
+				// Reset the linksArray
 				linksArray = [];
 
-				// Get the iframe (again)
-				iframe = document.getElementById("webframe");
-				// Get its document object (again)
-				iframeDocument = iframe.contentWindow.document;
-				// Get the story again
-				storydata = iframeDocument.querySelector("#story");
-
 				// Get all of the <a>
-				var aLinksResults = storydata.querySelectorAll("a");
+				let aLinksResults = storydata.querySelectorAll("a");
 
 				// Move through the <a> elements
-				for(var k = 0;
+				for(let k = 0;
 					k < aLinksResults.length; 
 					k++) {
 
@@ -105,9 +102,6 @@
 
 			function refresh() {
 
-				// Set a default value
-				var passage = null;
-
 				// Get the iframe (again)
 				iframe = document.getElementById("webframe");
 				// Get its document object (again)
@@ -117,11 +111,11 @@
 
 				// Ink keeps the header inside of the story, so
 				//  we parse the paragraphs *inside* the story.
-				var ps = storydata.querySelectorAll("p");
+				let ps = storydata.querySelectorAll("p");
 				// Create a temporary element
-				var passage = document.createElement("div");
+				let passage = document.createElement("div");
 
-				for(var i = 0; i < ps.length; i++) {
+				for(let i = 0; i < ps.length; i++) {
 					// Add back each element
 					passage.appendChild(ps[i]);
 				}
@@ -142,7 +136,7 @@
 			// Send the first update
 			refresh();
 
-			ipcRenderer.on('async-remote-click', function(event, arg) {
+			ipcRenderer.on('async-remote-click', (event, arg) => {
 
 				// Do a sanity check
 				// 	arg should be greater than or equal to 0
@@ -152,7 +146,7 @@
 				   arg < linksArray.length && 
 				   linksArray.length > 0) {
 
-					var event = new MouseEvent('click', {
+					let event = new MouseEvent('click', {
 						view: window,
 						bubbles: true,
 						cancelable: true
@@ -176,13 +170,12 @@
 			});
 
 			// Listen for an 'undo' event from main process
-			ipcRenderer.on('async-remote-undo', function(event, arg) {
+			ipcRenderer.on('async-remote-undo', (event, arg) => {
 
 				// There is no 'undo' element
 				ipcRenderer.send('async-main-error', "Undo not currently supported.");
 
 			});
-
 	}
 
 	</script>

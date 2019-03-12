@@ -6,7 +6,7 @@
 		const { ipcRenderer } = require('electron');
 
 		// Create a global that will store the status
-		var story = {
+		let story = {
 			format: "",
 			formatVerison: "",
 			name: "",
@@ -16,17 +16,21 @@
 
 		// More global linksArray that will be 
 		//  re-populated after each detected 'click'
-		var linksArray = [];
+		let linksArray = [];
+
+		// Set defaults
+		let iframeDocument = null;
+		let storydata = null;
 
 	    // Wait for Twine to load the <tw-storydata> element
 	    function waitForTwine() {
 
 	    	// Get the iframe
-			var iframe = document.getElementById("webframe");
+			let iframe = document.getElementById("webframe");
 			// Get its document object
-			var iframeDocument = iframe.contentWindow.document;
+			iframeDocument = iframe.contentWindow.document;
 			// Find the <tw-storydata> element and populate its data
-			var storydata = iframeDocument.querySelector("tw-storydata");
+			storydata = iframeDocument.querySelector("tw-storydata");
 
 			// If there is not a <tw-storydata> element,
 			//  something is very wrong. Stop everything.
@@ -92,9 +96,9 @@
 		function frameReady() {
 
 			// Get the iframe (again)
-			var iframe = document.getElementById("webframe");
+			let iframe = document.getElementById("webframe");
 			// Get its document object (again)
-			var iframeDocument = iframe.contentWindow.document;
+			iframeDocument = iframe.contentWindow.document;
 
 			function refreshLinks() {
 
@@ -115,12 +119,12 @@
 				// Erase previous links before re-populate
 				linksArray = [];
 				// Check for <tw-link> elements
-				var linksResults = passage.querySelectorAll("tw-link");
+				let linksResults = passage.querySelectorAll("tw-link");
 				// Check for <a> elements
-				var aLinksResults = passage.querySelectorAll("a");
+				let aLinksResults = passage.querySelectorAll("a");
 
 				// Move through the <a> elements
-				for(var k = 0;
+				for(let k = 0;
 					k < aLinksResults.length; 
 					k++) {
 
@@ -132,7 +136,7 @@
 				}
 
 				// Move through the <tw-link> elements
-				for(var i = 0; 
+				for(let i = 0; 
 					i < linksResults.length;
 					i++) {
 
@@ -154,12 +158,12 @@
 				ipcRenderer.send('async-main-error', "");
 				
 				// Set a default value
-				var passage = null;
+				let passage = null;
 
 				// Get the iframe (again)
-				var iframe = document.getElementById("webframe");
+				let iframe = document.getElementById("webframe");
 				// Get its document object (again)
-				var iframeDocument = iframe.contentWindow.document;
+				iframeDocument = iframe.contentWindow.document;
 
 				// Check for story format
 				if(story.format == "Harlowe") {
@@ -196,7 +200,7 @@
 			refresh();
 
 			// Listen for a 'click' event from main process
-			ipcRenderer.on('async-remote-click', function(event, arg) {
+			ipcRenderer.on('async-remote-click', (event, arg) => {
 
 				// Do a sanity check
 				// 	arg should be greater than or equal to 0
@@ -230,10 +234,10 @@
 			});
 
 			// Listen for an 'undo' event from main process
-			ipcRenderer.on('async-remote-undo', function(event, arg) {
+			ipcRenderer.on('async-remote-undo', (event, arg) => {
 
 				// Set a default value
-				var undoElement = null;
+				let undoElement = null;
 
 				if(story.format == "Harlowe") {
 

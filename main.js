@@ -1,5 +1,5 @@
 // Load the app, BrowserWindow, and ipcMain modules
-const {app, BrowserWindow, ipcMain} = require('electron');
+const {app, BrowserWindow, ipcMain, dialog} = require('electron');
 const fs = require('fs');
 
 // Load up a webserver API
@@ -18,19 +18,23 @@ let statusContents = {};
 let undoContents = false;
 let errorContents = "";
 
-// If JSON in settings.json is well-formed, this will be overwritten.
-//  If not, it will be populated with defaults.
-let settings = {}
+// Default values
+let settings = {
+  port: null,
+  loader: null,
+  log: null,
+  serverIsReady: false
+};
 
 // Global reference to writeStream
 let writeStream;
 
 // Keep a global reference of the window object. If not, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let mainWindow;
-let webContents;
-let settingsWindow;
-let settingsWebContents;
+var mainWindow;
+var webContents;
+var settingsWindow;
+var settingsWebContents;
 
 // Create (or re-create) the background window
 function createBackgroundWindow() {
@@ -54,11 +58,13 @@ function createBackgroundWindow() {
 
   // Do a sanity check
   // Does the loader have a folder in the current directory?
-  if(fs.existsSync("./" + settings.loader)) {
+  // Is the loader an empty string?
+  if(fs.existsSync("./" + settings.loader) && settings.loader != null) {
     // Load the interface in the background
     mainWindow.loadFile(settings.loader + '/index.html');
   } else {
-    console.log("Loader not found");
+    console.log("Loader not found!");
+    dialog.showErrorBox('Error', 'The selected loader is not found!');
   }
 
 }
@@ -83,7 +89,7 @@ function createWindow() {
   settingsWebContents = settingsWindow.webContents;
 
   // Emitted when the window is closed. 
-  settingsWindow.on('closed', function () {
+  settingsWindow.on('closed', () => {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
@@ -96,14 +102,20 @@ function createWindow() {
 
   // Wait for the settings window to load
   settingsWebContents.on('dom-ready', () => {
-    
-    // Electron is loaded
-    // SettingsWindow is loaded
 
     // Load the background window
     createBackgroundWindow();
 
-    // Time to load the express server
+    // Send the loaded settings to the loader window
+    settingsWebContents.send('async-remote-settings', settings);
+
+    if(settings.log != null) {
+      // Set the writeStream
+      // TODO: Test the path
+      writeStream = fs.createWriteStream(settings.log);
+    }
+
+    // Start the server
     startServer();
 
   });  
@@ -117,7 +129,10 @@ function loadSettings() {
   if(fs.existsSync("settings.json") ) {
 
     // Load the settings.json file
-    var contents = fs.readFileSync("settings.json");
+    let contents = fs.readFileSync("settings.json");
+
+    // Check for JSON parsing errors
+    let wasError = false;
 
     try {
       
@@ -127,24 +142,35 @@ function loadSettings() {
     } catch (event) {
 
       // File was malformed or some other error occured
+      wasError = true;
       console.log("Malformed JSON!");
+      dialog.showErrorBox('Error', 'Malformed or missing JSON in settings.json file!');
 
-      // Populate the settings object with the defaults
-      settings.port = 3000;
-      settings.loader = "twine";
-      settings.log = "session.log";
+    }
 
+    // There weren't any JSON parsing errors
+    if(wasError == false) {
+
+      // Test if 'port' is a number
+      if(!Number.isNaN(settings.port)) {
+
+        // For whatever reason, the value of 'port' is not a number
+        settings.port = null;
+        settings.serverIsReady = false;
+
+      } else {
+
+        // Probably things are now safe
+        settings.serverIsReady = true;
+
+      }
     }
 
   } else {
 
     // File doesn't exist!
-    console.log("settings.json not found!")
-
-    // Populate the settings object with the defaults
-    settings.port = 3000;
-    settings.loader = "twine";
-    settings.log = "session.log";
+    console.log("settings.json not found!");
+    dialog.showErrorBox('Error', 'The settings.json file is missing!');
 
   }
 
@@ -152,40 +178,33 @@ function loadSettings() {
 
 function startServer() {
 
-  // Send the loaded settings to the loader window
-  settingsWebContents.send('async-remote-settings', settings);
-
-  // Set the writeStream
-  writeStream = fs.createWriteStream(settings.log);
-
-
-  webApp.get('/', function(req, res) {
+  webApp.get('/', (req, res) => {
     res.json(statusContents);
   });
 
-  webApp.get('/text', function(req, res) {
+  webApp.get('/text', (req, res) => {
     res.json({"text": textContents});
   });
 
-  webApp.get('/html', function(req, res) {
+  webApp.get('/html', (req, res) => {
     res.json({"html": htmlContents});
   });
 
-  webApp.get('/links', function(req, res) {
+  webApp.get('/links', (req, res) => {
     res.json({"links": linksContents});
   });
 
-  webApp.get('/undo', function(req, res) {
+  webApp.get('/undo', (req, res) => {
     res.json({"undo": undoContents});
     // Tell the rendered to 'undo'
     webContents.send('async-remote-undo', true);
   });
 
-  webApp.get('/error', function(req, res) {
+  webApp.get('/error', (req, res) => {
     res.json({"error": errorContents});
   });
 
-  webApp.get('/reset', function(req, res) {
+  webApp.get('/reset', (req, res) => {
     res.json({"reset": true});
     // Reload the file based on the loader name
     //webContents.reload();
@@ -193,12 +212,12 @@ function startServer() {
     
   });
 
-  webApp.get('/click/:id', function(req, res) {
+  webApp.get('/click/:id', (req, res) => {
 
     // Convert to number with a radix of 10
     // This prevents people passing hexidecimal numbers.
     // It will also round float-pointing numbers
-    var id = Number.parseInt(req.params.id, 10);
+    let id = Number.parseInt(req.params.id, 10);
 
     // Quick sanity check
     // Input should ONLY be numbers
@@ -217,22 +236,32 @@ function startServer() {
   });
 
   // Catch-all for trying routes that don't exist
-  webApp.use(function (req, res, next) {
+  webApp.use((req, res, next) => {
     res.status(404).json({"error": "Not a valid route!"});
-  })
-
-  httpServer = webApp.listen(settings.port, function() {
-    console.log('Server running!');
   });
+
+
+  if(settings.port != null) {
+
+    httpServer = webApp.listen(settings.port, () => {
+      console.log('Server running!');
+    });
+
+  } else {
+
+    console.log("Invalid or missing port number!");
+    dialog.showErrorBox('Error', 'Invalid or missing port number!');
+
+  }
 
 
 }
 
 // Electron is ready to load windows
-app.on('ready', createWindow)
+app.on('ready', createWindow);
 
 // Quit when all windows are closed.
-app.on('window-all-closed', function () {
+app.on('window-all-closed', () => {
   // On macOS it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== 'darwin') {
@@ -240,7 +269,7 @@ app.on('window-all-closed', function () {
   }
 })
 
-app.on('activate', function () {
+app.on('activate', () => {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (mainWindow === null && settingsWindow == null) {
@@ -259,44 +288,56 @@ app.on('activate', function () {
 // 'error': error channel
 
 // Listen on the "async" channel for events
-ipcMain.on('async-main-html', function(event, arg) {
+ipcMain.on('async-main-html', (event, arg) => {
   htmlContents = arg;
 });
 
-ipcMain.on('async-main-text', function(event, arg) {
+ipcMain.on('async-main-text', (event, arg) => {
   textContents = arg;
 });
 
-ipcMain.on('async-main-links', function(event, arg) {
+ipcMain.on('async-main-links', (event, arg) => {
   linksContents = arg;
 });
 
-ipcMain.on('async-main-status', function(event, arg) {
+ipcMain.on('async-main-status', (event, arg) => {
   statusContents = arg;
 });
 
-ipcMain.on('async-main-undo', function(event, arg) {
+ipcMain.on('async-main-undo', (event, arg) => {
   undoContents = arg;
 });
 
-ipcMain.on('async-main-error', function(event, arg) {
+ipcMain.on('async-main-error', (event, arg) => {
   errorContents = arg;
 });
 
-ipcMain.on('async-main-server', function(event, arg) {
+ipcMain.on('async-main-server', (event, arg) => {
+
   if(arg == "run") {
 
-    httpServer = webApp.listen(settings.port, function() {
-      console.log('Server running!');
-    
-    });
+    if(settings.port != null) {
 
-  } else {
+      httpServer = webApp.listen(settings.port, () => {
+        console.log('Server running!');
+      });
 
-    httpServer.close(function() {
+    } else {
+
+      console.log("Invalid or missing port number!");
+      dialog.showErrorBox('Error', 'Invalid or missing port number!');
+
+    }
+
+  }
+
+  if(arg == "stop") {
+
+    httpServer.close(() => {
       console.log('Server shutting down!');
     });
 
   }
+
 })
 

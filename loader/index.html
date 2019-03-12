@@ -30,7 +30,7 @@
 				// Set the initial state of the webserver
 				let serverOn = "run";
 
-				$('button').on("click", function() {
+				$('button').on("click", () => {
 
 					if(serverOn == "run") {
 						ipcRenderer.send('async-main-server', "stop");
@@ -43,12 +43,16 @@
 
 				})
 
-				ipcRenderer.on('async-remote-settings', function(event, arg) {
+				ipcRenderer.on('async-remote-settings', (event, arg) => {
 
 						$("#settings").html(
 							'<p>Local Port: ' + arg.port + '</p>' +
 							'<p>Loader: ' + arg.loader + '</p>' +
 							'<p>Log: ' + arg.log + '</p>');
+
+						if(arg.serverIsReady == false) {
+							$('button').attr('disabled', '');
+						}
 						
 				});
 

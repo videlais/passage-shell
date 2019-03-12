@@ -27,10 +27,10 @@ Passage Shell currently supports the following formats:
 
 ## Settings
 
-The [settings.json](settings.json) holds the three options of _port_ and _loader_. 
+The [settings.json](settings.json) holds the options of _port_ and _loader_. 
 
-* _port_: Port number to start the webserver
-* _loader_: The type of files to load. Loader will attempt to open the 'index.html' file of any directory matching its value
+* _port_: Port number for the webserver
+* _loader_: The type of files to load. Loader will attempt to open the 'index.html' file inside any directory matching its value
 
 Passage Shell **will not** run without proper settings and attempts to prevent invalid values.
 

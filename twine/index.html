@@ -31,7 +31,7 @@
 			// If there is not a <tw-storydata> element,
 			//  something is very wrong. Stop everything.
 			if(storydata == null) {
-				ipcRenderer.send('async-main-status', {"error": "Not a Twine file!"});
+				ipcRenderer.send('async-main-error', {"error": "Not a Twine file!"});
 				return;
 			}
 
@@ -53,19 +53,25 @@
 			if(story.format == "Harlowe") {
 				// Check for Harlowe
 				passage = iframeDocument.querySelector("tw-passage");
+				// Send that undoing is possible
+				ipcRenderer.send('async-main-undo', true);
 
 			} else if(story.format == "SugarCube") {
 				// Check for SugarCube
 				passage = iframeDocument.querySelector("#passages");
+				// Send that undoing is possible
+				ipcRenderer.send('async-main-undo', true);
 
 			} else if(story.format == "Snowman") {
 				// Check for Snowman
 				passage = iframeDocument.querySelector("#passage");
+				// Send that undoing is not possible
+				ipcRenderer.send('async-main-undo', false);
 
 			} else {
 				// If it is not Harlowe, SugarCube, or Snowman,
 				//  stop everything.
-				ipcRenderer.send('async-main-status', {"error": "Not a valid story format!"});
+				ipcRenderer.send('async-main-error', "Not a valid story format!");
 				return;
 			}
 
@@ -144,6 +150,9 @@
 
 			function refresh() {
 
+				// Clear the last error message
+				ipcRenderer.send('async-main-error', "");
+				
 				// Set a default value
 				var passage = null;
 
@@ -186,6 +195,7 @@
 			// Send the first update
 			refresh();
 
+			// Listen for a 'click' event from main process
 			ipcRenderer.on('async-remote-click', function(event, arg) {
 
 				// Do a sanity check
@@ -208,7 +218,7 @@
 
 					} catch (event) {
 
-						ipcRenderer.send('async-main-status', {"error": "Could not click link or link-like element!"});
+						ipcRenderer.send('async-main-error', "Could not click link or link-like element!");
 
 					}
 
@@ -219,10 +229,77 @@
 
 			});
 
+			// Listen for an 'undo' event from main process
+			ipcRenderer.on('async-remote-undo', function(event, arg) {
+
+				// Set a default value
+				var undoElement = null;
+
+				if(story.format == "Harlowe") {
+
+					// Find the ".undo" element, if it exists
+					undoElement = iframeDocument.querySelector(".undo");
+
+				} else if(story.format == "SugarCube") {
+
+					// Find the #history-backward element
+					undoElement = iframeDocument.querySelector("#history-backward");
+
+					// Check if it is 'disabled' or not
+					if (undoElement.hasAttribute("disabled")) {
+						// Element exists but is disabled
+						undoElement = null;
+					}
+
+				} else if(story.format == "Snowman") {
+
+					// Snowman doesn't directly support undoing
+					undoElement = null;
+
+				}
+
+				if(undoElement != null) {
+
+					var event = new MouseEvent('click', {
+						view: window,
+						bubbles: true,
+						cancelable: true
+					});
+
+					var wasError = false;
+
+					try {
+							// Click the link or link-like element
+						undoElement.dispatchEvent(event);
+
+					} catch (event) {
+
+						wasError = true;
+
+						ipcRenderer.send('async-main-error', "Could not click 'undo' element!");
+
+					}
+
+					if(wasError == false) {
+						// No errors occured.
+						// Refresh the contents after the action.
+						refresh();
+					}
+					
+
+				} else {
+
+					// There is no 'undo' element
+					ipcRenderer.send('async-main-error', "Undo not currently supported.");
+
+				}
+
+			});
+
 	}
 
 	</script>
-	<iframe id="webframe" src="index-snowman.html" style="position:fixed; top:0; left:0; bottom:0; right:0; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden; z-index:999999;" onload="waitForTwine();">
+	<iframe id="webframe" src="index-sugarcube.html" style="position:fixed; top:0; left:0; bottom:0; right:0; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden; z-index:999999;" onload="waitForTwine();">
 	</iframe>
 </body>
 </html>

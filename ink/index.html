@@ -30,7 +30,7 @@
 			var inkTest = iframeDocument.querySelector(".written-in-ink");
 
 			if(inkTest == null) {
-				ipcRenderer.send('async-main-status', {"error": "This is not an Ink file!"});
+				ipcRenderer.send('async-main-error', "This is not an Ink file!");
 				return;
 			}
 
@@ -66,6 +66,9 @@
 
 			// Send the status
 			ipcRenderer.send('async-main-status', story);
+
+			// Send that undoing is not possible
+			ipcRenderer.send('async-main-undo', false);
 
 			storydata = iframeDocument.querySelector("#story");
 
@@ -161,7 +164,7 @@
 
 					} catch (event) {
 
-						ipcRenderer.send('async-main-status', {"error": "Could not click link or link-like element!"});
+						ipcRenderer.send('async-main-error', "Could not click link or link-like element!");
 
 					}
 
@@ -169,6 +172,14 @@
 
 				// Always refresh after a click event
 				refresh();
+
+			});
+
+			// Listen for an 'undo' event from main process
+			ipcRenderer.on('async-remote-undo', function(event, arg) {
+
+				// There is no 'undo' element
+				ipcRenderer.send('async-main-error', "Undo not currently supported.");
 
 			});
 

@@ -15,6 +15,8 @@ let textContents = "";
 let htmlContents = "";
 let linksContents = [];
 let statusContents = {};
+let undoContents = false;
+let errorContents = "";
 
 // If JSON in settings.json is well-formed, this will be overwritten.
 //  If not, it will be populated with defaults.
@@ -38,7 +40,7 @@ function createWindow () {
     webPreferences: {
       nodeIntegration: true
     },
-    show: false
+    show: true
   })
 
   settingsWindow = new BrowserWindow({
@@ -72,7 +74,7 @@ function createWindow () {
 
   // Open the DevTools for testing purposes
   // Remove this later
-  //mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 
   // Emitted when the window is closed. 
   settingsWindow.on('closed', function () {
@@ -132,7 +134,7 @@ function loadSettings() {
 
     // Populate the settings object with the defaults
     settings.port = 3000;
-    settings.loader = "Twine";
+    settings.loader = "twine";
     settings.log = "session.log";
 
   }
@@ -162,6 +164,20 @@ function startServer() {
 
   webApp.get('/links', function(req, res) {
     res.json({"links": linksContents});
+  });
+
+  webApp.get('/undo', function(req, res) {
+    res.json({"undo": undoContents});
+    // Tell the rendered to 'undo'
+    webContents.send('async-remote-undo', true);
+  });
+
+  webApp.get('/error', function(req, res) {
+    res.json({"error": errorContents});
+  });
+
+  webApp.get('/reset', function(req, res) {
+    // Reset the loader
   });
 
   webApp.get('/click/:id', function(req, res) {
@@ -226,7 +242,8 @@ app.on('activate', function () {
 // 'links': links content
 // 'status': status content
 // 'server': switching webserver on and off
-// 'restart': reload the file
+// 'undo': is undoing possible?
+// 'error': error channel
 
 // Listen on the "async" channel for events
 ipcMain.on('async-main-html', function(event, arg) {
@@ -243,6 +260,14 @@ ipcMain.on('async-main-links', function(event, arg) {
 
 ipcMain.on('async-main-status', function(event, arg) {
   statusContents = arg;
+});
+
+ipcMain.on('async-main-undo', function(event, arg) {
+  undoContents = arg;
+});
+
+ipcMain.on('async-main-error', function(event, arg) {
+  errorContents = arg;
 });
 
 ipcMain.on('async-main-server', function(event, arg) {

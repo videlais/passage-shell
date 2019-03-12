@@ -25,14 +25,16 @@ let settings = {}
 // Global reference to writeStream
 let writeStream;
 
-// Keep a global reference of the window object, if you don't, the window will
+// Keep a global reference of the window object. If not, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 let webContents;
 let settingsWindow;
 let settingsWebContents;
 
-function createWindow () {
+// Create (or re-create) the background window
+function createBackgroundWindow() {
+
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 800,
@@ -40,22 +42,15 @@ function createWindow () {
     webPreferences: {
       nodeIntegration: true
     },
-    show: true
-  })
+    show: false
+  });
 
-  settingsWindow = new BrowserWindow({
-    width: 400,
-    height: 400,
-    webPreferences: {
-      nodeIntegration: true
-    }
-  })
+  // Save a reference to webContents
+  webContents = mainWindow.webContents;
 
-  // With the windows loading, load the settings
-  loadSettings();
-
-  // Load the loader file
-  settingsWindow.loadFile('loader/index.html');
+  // Open the DevTools for testing purposes
+  // Remove this later
+  //mainWindow.webContents.openDevTools();
 
   // Do a sanity check
   // Does the loader have a folder in the current directory?
@@ -66,15 +61,26 @@ function createWindow () {
     console.log("Loader not found");
   }
 
-  // Save a reference to webContents
-  webContents = mainWindow.webContents;
+}
+
+function createWindow() {
+  
+  settingsWindow = new BrowserWindow({
+    width: 400,
+    height: 400,
+    webPreferences: {
+      nodeIntegration: true
+    }
+  });
+
+  // With the windows loading, load the settings
+  loadSettings();
+
+  // Load the loader file
+  settingsWindow.loadFile('loader/index.html');
 
   // Save a reference to the settings window contents
   settingsWebContents = settingsWindow.webContents;
-
-  // Open the DevTools for testing purposes
-  // Remove this later
-  mainWindow.webContents.openDevTools();
 
   // Emitted when the window is closed. 
   settingsWindow.on('closed', function () {
@@ -89,11 +95,14 @@ function createWindow () {
   });
 
   // Wait for the settings window to load
-  settingsWebContents.on('did-finish-load', () => {
+  settingsWebContents.on('dom-ready', () => {
     
     // Electron is loaded
     // SettingsWindow is loaded
-    // MainWindow is loading
+
+    // Load the background window
+    createBackgroundWindow();
+
     // Time to load the express server
     startServer();
 
@@ -177,7 +186,11 @@ function startServer() {
   });
 
   webApp.get('/reset', function(req, res) {
-    // Reset the loader
+    res.json({"reset": true});
+    // Reload the file based on the loader name
+    //webContents.reload();
+    createBackgroundWindow();
+    
   });
 
   webApp.get('/click/:id', function(req, res) {

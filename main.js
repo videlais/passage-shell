@@ -23,12 +23,8 @@ let errorContents = "";
 let settings = {
   port: null,
   loader: null,
-  log: null,
   serverIsReady: false
 };
-
-// Global reference to writeStream
-let writeStream;
 
 // Keep a global reference of the window object. If not, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -83,8 +79,18 @@ function createWindow() {
   // With the windows loading, load the settings
   loadSettings();
 
-  // Load the loader file
-  settingsWindow.loadFile('loader/index.html');
+  // Check if settings directory exists before loading index.html
+  if(fs.existsSync('settings/index.html') ) {
+
+    // Load the settings window
+    settingsWindow.loadFile('settings/index.html');
+
+  } else {
+
+    console.log("Settings directory missing!");
+    dialog.showErrorBox('Error', 'Settings directory missing!');
+
+  }
 
   // Save a reference to the settings window contents
   settingsWebContents = settingsWindow.webContents;
@@ -97,8 +103,6 @@ function createWindow() {
     settingsWindow = null;
     // If the settings window is closed, close the other window
     mainWindow = null;
-    // Close the log session stream
-    writeStream.end();
   });
 
   // Wait for the settings window to load
@@ -109,12 +113,6 @@ function createWindow() {
 
     // Send the loaded settings to the loader window
     settingsWebContents.send('async-remote-settings', settings);
-
-    if(settings.log != null) {
-      // Set the writeStream
-      // TODO: Test the path
-      writeStream = fs.createWriteStream(settings.log);
-    }
 
     // Start the server
     startServer();

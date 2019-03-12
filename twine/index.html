@@ -59,18 +59,24 @@
 				passage = iframeDocument.querySelector("tw-passage");
 				// Send that undoing is possible
 				ipcRenderer.send('async-main-undo', true);
+				// Send that redoing is possible
+				ipcRenderer.send('async-main-redo', true);
 
 			} else if(story.format == "SugarCube") {
 				// Check for SugarCube
 				passage = iframeDocument.querySelector("#passages");
 				// Send that undoing is possible
 				ipcRenderer.send('async-main-undo', true);
+				// Send that redoing is possible
+				ipcRenderer.send('async-main-redo', true);
 
 			} else if(story.format == "Snowman") {
 				// Check for Snowman
 				passage = iframeDocument.querySelector("#passage");
 				// Send that undoing is not possible
 				ipcRenderer.send('async-main-undo', false);
+				// Send that redoing is not possible
+				ipcRenderer.send('async-main-redo', false);
 
 			} else {
 				// If it is not Harlowe, SugarCube, or Snowman,
@@ -295,6 +301,73 @@
 
 					// There is no 'undo' element
 					ipcRenderer.send('async-main-error', "Undo not currently supported.");
+
+				}
+
+			});
+
+				// Listen for an 'undo' event from main process
+			ipcRenderer.on('async-remote-redo', (event, arg) => {
+
+				// Set a default value
+				let redoElement = null;
+
+				if(story.format == "Harlowe") {
+
+					// Find the ".undo" element, if it exists
+					redoElement = iframeDocument.querySelector(".redo");
+
+				} else if(story.format == "SugarCube") {
+
+					// Find the #history-backward element
+					redoElement = iframeDocument.querySelector("#history-forward");
+
+					// Check if it is 'disabled' or not
+					if (redoElement.hasAttribute("disabled")) {
+						// Element exists but is disabled
+						redoElement = null;
+					}
+
+				} else if(story.format == "Snowman") {
+
+					// Snowman doesn't directly support undoing
+					redoElement = null;
+
+				}
+
+				if(redoElement != null) {
+
+					var event = new MouseEvent('click', {
+						view: window,
+						bubbles: true,
+						cancelable: true
+					});
+
+					var wasError = false;
+
+					try {
+							// Click the link or link-like element
+						redoElement.dispatchEvent(event);
+
+					} catch (event) {
+
+						wasError = true;
+
+						ipcRenderer.send('async-main-error', "Could not click 'redo' element!");
+
+					}
+
+					if(wasError == false) {
+						// No errors occured.
+						// Refresh the contents after the action.
+						refresh();
+					}
+					
+
+				} else {
+
+					// There is no 'redo' element
+					ipcRenderer.send('async-main-error', "Redo not currently supported.");
 
 				}
 

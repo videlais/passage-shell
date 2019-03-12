@@ -16,6 +16,7 @@ let htmlContents = "";
 let linksContents = [];
 let statusContents = {};
 let undoContents = false;
+let redoContents = false;
 let errorContents = "";
 
 // Default values
@@ -152,7 +153,7 @@ function loadSettings() {
     if(wasError == false) {
 
       // Test if 'port' is a number
-      if(!Number.isNaN(settings.port)) {
+      if(Number.isNaN(settings.port)) {
 
         // For whatever reason, the value of 'port' is not a number
         settings.port = null;
@@ -198,6 +199,12 @@ function startServer() {
     res.json({"undo": undoContents});
     // Tell the rendered to 'undo'
     webContents.send('async-remote-undo', true);
+  });
+
+  webApp.get('/redo', (req, res) => {
+    res.json({"redo": redoContents});
+    // Tell the rendered to 'redo'
+    webContents.send('async-remote-redo', true);
   });
 
   webApp.get('/error', (req, res) => {
@@ -285,6 +292,7 @@ app.on('activate', () => {
 // 'status': status content
 // 'server': switching webserver on and off
 // 'undo': is undoing possible?
+// 'redo': is redoing possible?
 // 'error': error channel
 
 // Listen on the "async" channel for events
@@ -306,6 +314,10 @@ ipcMain.on('async-main-status', (event, arg) => {
 
 ipcMain.on('async-main-undo', (event, arg) => {
   undoContents = arg;
+});
+
+ipcMain.on('async-main-redo', (event, arg) => {
+  redoContents = arg;
 });
 
 ipcMain.on('async-main-error', (event, arg) => {

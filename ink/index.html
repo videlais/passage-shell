@@ -71,6 +71,8 @@
 
 			// Send that undoing is not possible
 			ipcRenderer.send('async-main-undo', false);
+			// Send that redoing is not possible
+			ipcRenderer.send('async-main-redo', false);
 
 			// Get storydata element
 			storydata = iframeDocument.querySelector("#story");
@@ -174,6 +176,14 @@
 
 				// There is no 'undo' element
 				ipcRenderer.send('async-main-error', "Undo not currently supported.");
+
+			});
+
+			// Listen for an 'redo' event from main process
+			ipcRenderer.on('async-remote-redo', (event, arg) => {
+
+				// There is no 'undo' element
+				ipcRenderer.send('async-main-error', "Redo not currently supported.");
 
 			});
 	}

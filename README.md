@@ -34,6 +34,12 @@ The [settings.json](settings.json) holds the options of _port_ and _loader_.
 
 Passage Shell **will not** run without proper settings and attempts to prevent invalid values.
 
+## Instructions
+
+Run ```npm install``` to prepare dependencies and then ```npm start``` to run.
+
+Because of loading times and different formats using transitions, it is not recommended to poll less than every 10ms.
+
 ## License
 
 [MIT](LICENSE.md)

@@ -6,7 +6,7 @@ Passage Shell is an [Electron](https://electronjs.org/)-based testing platform f
 
 The Express framework exposes the same routes across all loaders. However, not all functionality is available for all formats.
 
-All routes return JSON-encoded values. Return objects are based on their route names except in the case of "/click/X", which can also return an error object.
+All routes return JSON-encoded values. Return objects are based on their route names except in the case of _/click/X_, which can also return an error object, and _/file_, which only returns the static file.
 
 * _/_: Information about the file
 * _/text_: The current text of the passage 
@@ -17,6 +17,7 @@ All routes return JSON-encoded values. Return objects are based on their route n
 * _/redo_: Attempts to "redo" based on file and loader
 * _/error_: The latest error (if any) to occur
 * _/reset_: Reloads the file (but maintains webserver)
+* _/file_: The file from settings.json
 
 ## Formats
 
@@ -27,18 +28,23 @@ Passage Shell currently supports the following formats:
 
 ## Settings
 
-The [settings.json](settings.json) holds the options of _port_ and _loader_. 
+The [settings.json](settings.json) holds the options of _port_, _loader_, and _file_. 
 
 * _port_: Port number for the webserver
 * _loader_: The type of files to load. Loader will attempt to open the 'index.html' file inside any directory matching its value
+* _file_: The static file to serve. **Must** be an absolute path.
 
 Passage Shell **will not** run without proper settings and attempts to prevent invalid values.
+
+## Testing
+
+Every other route but _/file_ communicates with the renderer process. Therefore, it is possible to work with the other routes and "play" the file served by _/file_ without interferring with each other.
 
 ## Instructions
 
 Run ```npm install``` to prepare dependencies and then ```npm start``` to run.
 
-Because of loading times and different formats using transitions, it is not recommended to poll less than every 10ms.
+Because of loading times and different formats using transitions, it is recommended to poll every 10ms or more.
 
 ## License
 

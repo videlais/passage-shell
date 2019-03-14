@@ -1,6 +1,7 @@
 // Load the app, BrowserWindow, and ipcMain modules
 const {app, BrowserWindow, ipcMain, dialog} = require('electron');
 const fs = require('fs');
+const path = require('path');
 
 // Load up a webserver API
 const express = require('express');
@@ -23,18 +24,20 @@ let errorContents = "";
 let settings = {
   port: null,
   loader: null,
+  file: null,
   serverIsReady: false
 };
 
-// Keep a global reference of the window object. If not, the window will
-// be closed automatically when the JavaScript object is garbage collected.
-var mainWindow;
-var webContents;
-var settingsWindow;
-var settingsWebContents;
+// Default values
+var mainWindow = null;
+var webContents = null;
+var settingsWindow = null;
+var settingsWebContents = null;
 
 // Create (or re-create) the background window
 function createBackgroundWindow() {
+
+  let creationSuccessful = true;
 
   // Create the browser window.
   mainWindow = new BrowserWindow({
@@ -56,13 +59,51 @@ function createBackgroundWindow() {
   // Do a sanity check
   // Does the loader have a folder in the current directory?
   // Is the loader an empty string?
-  if(fs.existsSync("./" + settings.loader) && settings.loader != null) {
+  if(fs.existsSync("loaders/" + settings.loader + '/index.html') && settings.loader != null) {
     // Load the interface in the background
-    mainWindow.loadFile(settings.loader + '/index.html');
+    mainWindow.loadFile('loaders/' + settings.loader + '/index.html');
   } else {
+    // The loader wasn't found!
     console.log("Loader not found!");
     dialog.showErrorBox('Error', 'The selected loader is not found!');
+    creationSuccessful =  false;
   }
+
+  // If the loader failed or settings.file is not set, fail
+  if(creationSuccessful && settings.file != null) {
+
+    // Check to see that the file actually exists
+    if(!fs.existsSync(settings.file) ) {
+     
+      // File wasn't found!
+      console.log("File not found!");
+      dialog.showErrorBox('Error', 'The selected file is not found!');
+      creationSuccessful =  false;
+      // Reset the default value to prevent /file access later
+      settings.file = null;
+      // Reset server status
+      settings.serverIsReady = false;
+
+    } else {
+
+
+      // Check for relative paths
+      if(!path.isAbsolute(settings.file) ) {
+        
+        // Reset the default value to prevent /file access later
+        settings.file = null;
+        console.log("Absolute path needed!");
+        dialog.showErrorBox('Error', 'Absolute path needed!');
+        // Reset server status
+        settings.serverIsReady = false;
+
+      }
+
+    }
+
+  }
+
+  return creationSuccessful;
 
 }
 
@@ -108,14 +149,14 @@ function createWindow() {
   // Wait for the settings window to load
   settingsWebContents.on('dom-ready', () => {
 
-    // Load the background window
+    // Start the server
+    startServer();
+
+    // Create the background window
     createBackgroundWindow();
 
     // Send the loaded settings to the loader window
     settingsWebContents.send('async-remote-settings', settings);
-
-    // Start the server
-    startServer();
 
   });  
 
@@ -124,7 +165,7 @@ function createWindow() {
 function loadSettings() {
 
   // Sanity check
-  // Does the settings file exist?
+  // Does the settings.json exist?
   if(fs.existsSync("settings.json") ) {
 
     // Load the settings.json file
@@ -181,6 +222,24 @@ function startServer() {
     res.json(statusContents);
   });
 
+  webApp.get('/file', (req, res) => {
+    
+      // Send the file
+      if(settings.file != null) {
+
+        res.sendFile(settings.file, {}, (err) => {
+
+          if (err) {
+            console.log(err);
+            next(err);
+          }
+
+        });
+
+      }
+
+  });
+
   webApp.get('/text', (req, res) => {
     res.json({"text": textContents});
   });
@@ -196,13 +255,26 @@ function startServer() {
   webApp.get('/undo', (req, res) => {
     res.json({"undo": undoContents});
     // Tell the rendered to 'undo'
-    webContents.send('async-remote-undo', true);
+
+    // Just in case the server was started without
+    //  loading the background window somehow
+    if(webContents != null) {
+      webContents.send('async-remote-undo', true);      
+    }
+
+    
   });
 
   webApp.get('/redo', (req, res) => {
     res.json({"redo": redoContents});
     // Tell the rendered to 'redo'
-    webContents.send('async-remote-redo', true);
+
+    // Just in case the server was started without
+    //  loading the background window somehow
+    if(webContents != null) {
+      webContents.send('async-remote-redo', true);
+    }
+    
   });
 
   webApp.get('/error', (req, res) => {
@@ -219,24 +291,29 @@ function startServer() {
 
   webApp.get('/click/:id', (req, res) => {
 
-    // Convert to number with a radix of 10
-    // This prevents people passing hexidecimal numbers.
-    // It will also round float-pointing numbers
-    let id = Number.parseInt(req.params.id, 10);
+    // Just in case the server was started without
+    //  loading the background window somehow
+    if(webContents != null) {
 
-    // Quick sanity check
-    // Input should ONLY be numbers
-    if(Number.isNaN(id)) {
-      // Send an error message
-      res.json({"error" : "Input not a number!"});
-      
-    } else {
-      // Post the response
-      res.json({"click" : id});
+      // Convert to number with a radix of 10
+      // This prevents people passing hexidecimal numbers.
+      // It will also round float-pointing numbers
+      let id = Number.parseInt(req.params.id, 10);
 
-      // Send to the renderer to click the number
-      webContents.send('async-remote-click', id);
-    }
+      // Quick sanity check
+      // Input should ONLY be numbers
+      if(Number.isNaN(id)) {
+        // Send an error message
+        res.json({"error" : "Input not a number!"});
+        
+      } else {
+        // Post the response
+        res.json({"click" : id});
+
+        // Send to the renderer to click the number
+        webContents.send('async-remote-click', id);
+      }
+    } 
 
   });
 
@@ -258,7 +335,6 @@ function startServer() {
     dialog.showErrorBox('Error', 'Invalid or missing port number!');
 
   }
-
 
 }
 

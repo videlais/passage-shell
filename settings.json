@@ -1,4 +1,5 @@
 {
 	"port": 3000,
-	"loader": "twine2"
+	"loader": "twine2",
+	"file": ""
 }

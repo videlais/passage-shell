@@ -306,7 +306,7 @@
 
 			});
 
-				// Listen for an 'undo' event from main process
+			// Listen for an 'undo' event from main process
 			ipcRenderer.on('async-remote-redo', (event, arg) => {
 
 				// Set a default value
@@ -373,10 +373,10 @@
 
 			});
 
-	}
+		}
 
 	</script>
-	<iframe id="webframe" src="index-sugarcube.html" style="position:fixed; top:0; left:0; bottom:0; right:0; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden; z-index:999999;" onload="waitForTwine();">
+	<iframe id="webframe" src="http://127.0.0.1:3000/file" style="position:fixed; top:0; left:0; bottom:0; right:0; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden; z-index:999999;" onload="waitForTwine();">
 	</iframe>
 </body>
 </html>

@@ -25,10 +25,10 @@
 		let iframeDocument = null;
 		let storydata = null;
 
-	    // Wait for Twine to load the <tw-storydata> element
-	    function waitForTwine() {
+	  // Wait for Twine to load the <tw-storydata> element
+	  function waitForTwine() {
 
-	    	// Get the iframe
+	    // Get the iframe
 			let iframe = document.getElementById("webframe");
 			// Get its document object
 			iframeDocument = iframe.contentWindow.document;
@@ -82,25 +82,25 @@
 				ipcRenderer.send('async-main-redo', false);
 
 			} else {
-				// If it is not Harlowe, SugarCube, or Snowman,
-				//  stop everything.
-				ipcRenderer.send('async-main-error', "Not a valid story format!");
-				return;
+					// If it is not Harlowe, SugarCube, or Snowman,
+					//  stop everything.
+					ipcRenderer.send('async-main-error', "Not a valid story format!");
+					return;
 			}
 
-	    	// If it doesn't exist, loop again
-	    	if(passage == null) {
+	    // If it doesn't exist, loop again
+	    if(passage == null) {
 
 				// Wait for default 4ms before trying again
-	    		window.setTimeout(waitForTwine);
+	    	window.setTimeout(waitForTwine);
 
-	    	} else {
-	    		// Everything is now ready!
-	    		frameReady();
-
-	    	}
+	    } else {
+	    	// Everything is now ready!
+	    	frameReady();
 
 	    }
+
+	  }
 
 		function frameReady() {
 
@@ -110,6 +110,12 @@
 			iframeDocument = iframe.contentWindow.document;
 
 			function refreshLinks() {
+
+				// Get the story's source code
+				let storydataElement = iframeDocument.querySelector("tw-storydata");
+
+				// Send the source back
+				ipcRenderer.send('async-main-source', storydataElement.innerHTML);
 
 				if(story.format == "Harlowe") {
 					// Check for Harlowe

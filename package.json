@@ -1,6 +1,6 @@
 {
   "name": "passage-shell",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Passage Shell is a browser shell for running Twine projects remotely either locally or over a server.",
   "main": "main.js",
   "scripts": {

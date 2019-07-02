@@ -14,6 +14,7 @@ let httpServer;
 // Set the default values
 let textContents = "";
 let htmlContents = "";
+let sourceHTMLContents = "";
 let linksContents = [];
 let mouseoverlinksContents = [];
 let statusContents = {};
@@ -251,6 +252,10 @@ function startServer() {
     res.json({"html": htmlContents});
   });
 
+  webApp.get('/source', (req, res) => {
+    res.json({"source": sourceHTMLContents});
+  });
+
   webApp.get('/links', (req, res) => {
     res.json({"links": linksContents});
   });
@@ -403,6 +408,7 @@ app.on('activate', () => {
 // Listen for the 'main' events
 // 'html': HTML content
 // 'text': text content
+// 'source' HTML source of current passage
 // 'links': links content
 // 'mouseover-links': mouseover-links content
 // 'status': status content
@@ -419,6 +425,10 @@ ipcMain.on('async-main-html', (event, arg) => {
 
 ipcMain.on('async-main-text', (event, arg) => {
   textContents = arg;
+});
+
+ipcMain.on('async-main-source', (event, arg) => {
+  sourceHTMLContents = arg;
 });
 
 ipcMain.on('async-main-links', (event, arg) => {

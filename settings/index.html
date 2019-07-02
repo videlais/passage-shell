@@ -39,20 +39,19 @@
 						ipcRenderer.send('async-main-server', "run");
 						serverOn = "run";
 					}
-					
+
 
 				})
 
 				ipcRenderer.on('async-remote-settings', (event, arg) => {
 
 						$("#settings").html(
-							'<p>Local Port: ' + arg.port + '</p>' +
-							'<p>Loader: ' + arg.loader + '</p>');
+							'<p>Local Port: ' + arg.port + '</p>');
 
 						if(arg.serverIsReady == false) {
 							$('button').attr('disabled', '');
 						}
-						
+
 				});
 
 			</script>

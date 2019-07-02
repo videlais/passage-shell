@@ -26,7 +26,6 @@ let passageContents = {};
 // Default values
 let settings = {
   port: null,
-  loader: null,
   file: null,
   serverIsReady: false
 };
@@ -59,20 +58,9 @@ function createBackgroundWindow() {
   // Remove this later
   //mainWindow.webContents.openDevTools();
 
-  // Do a sanity check
-  // Does the loader have a folder in the current directory?
-  // Is the loader an empty string?
-  if(fs.existsSync("loaders/" + settings.loader + '/index.html') && settings.loader != null) {
-    // Load the interface in the background
-    mainWindow.loadFile('loaders/' + settings.loader + '/index.html');
-  } else {
-    // The loader wasn't found!
-    console.log("Loader not found!");
-    dialog.showErrorBox('Error', 'The selected loader is not found!');
-    creationSuccessful =  false;
-  }
+  mainWindow.loadFile('twine2/index.html');
 
-  // If the loader failed or settings.file is not set, fail
+  // If settings.file is not set, fail
   if(creationSuccessful && settings.file != null) {
 
     // Check to see that the file actually exists
@@ -114,8 +102,8 @@ function createWindow() {
 
   settingsWindow = new BrowserWindow({
     title: "Passage Shell",
-    width: 400,
-    height: 400,
+    width: 350,
+    height: 300,
     webPreferences: {
       nodeIntegration: true
     }

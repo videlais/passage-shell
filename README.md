@@ -1,6 +1,6 @@
 # Passage Shell 1.2
 
-Passage Shell is an [Electron](https://electronjs.org/)-based testing platform for browser-based narrative games. Using [Express](https://expressjs.com/), Passage Shell can remotely "play" projects using a system of inter-process communication (IPC) channels to send information between its main and rendering processes.
+Passage Shell is an [Electron](https://electronjs.org/)-based testing platform for Twine 2-based projects. Using [Express](https://expressjs.com/), Passage Shell can remotely "play" projects using a system of inter-process communication (IPC) channels to send information between its main and rendering processes.
 
 ## Routes
 
@@ -22,26 +22,26 @@ All routes return JSON-encoded values. Return objects are based on their route n
 * _/file_: The file from settings.json
 * _/source_: The inner HTML of the &lt;tw-storydata&gt; element
 
-## Formats
+## Story Formats
 
-Passage Shell currently supports the following formats:
+Passage Shell currently supports the following story formats:
 
-* Twine2 (Harlowe, SugarCube, and Snowman story formats)
-* Ink for Web
+* Harlowe
+* SugarCube
+* Snowman
 
 ## Settings
 
-The [settings.json](settings.json) holds the options of _port_, _loader_, and _file_.
+The [settings.json](settings.json) holds the options of _port_ and _file_.
 
 * _port_: Port number for the webserver
-* _loader_: The type of files to load. Loader will attempt to open the 'index.html' file inside any directory matching its value
 * _file_: The static file to serve. **Must** be an absolute path.
 
 Passage Shell **will not** run without proper settings and attempts to prevent invalid values.
 
 ## Testing
 
-Every other route but _/file_ communicates with the renderer process. Therefore, it is possible to work with the other routes and "play" the file served by _/file_ without interferring with each other.
+Every other route but _/file_ communicates with the renderer process. Therefore, it is possible to work with the other routes and "play" the file served by _/file_ without interfering with each other.
 
 ## Instructions
 

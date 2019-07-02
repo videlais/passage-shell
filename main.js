@@ -115,7 +115,6 @@ function createWindow() {
     title: "Passage Shell",
     width: 400,
     height: 400,
-    titleBarStyle: 'hidden',
     webPreferences: {
       nodeIntegration: true
     }

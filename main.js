@@ -15,10 +15,12 @@ let httpServer;
 let textContents = "";
 let htmlContents = "";
 let linksContents = [];
+let mouseoverlinksContents = [];
 let statusContents = {};
 let undoContents = false;
 let redoContents = false;
 let errorContents = "";
+let passageContents = {};
 
 // Default values
 let settings = {
@@ -74,7 +76,7 @@ function createBackgroundWindow() {
 
     // Check to see that the file actually exists
     if(!fs.existsSync(settings.file) ) {
-     
+
       // File wasn't found!
       console.log("File not found!");
       dialog.showErrorBox('Error', 'The selected file is not found!');
@@ -89,7 +91,7 @@ function createBackgroundWindow() {
 
       // Check for relative paths
       if(!path.isAbsolute(settings.file) ) {
-        
+
         // Reset the default value to prevent /file access later
         settings.file = null;
         console.log("Absolute path needed!");
@@ -108,10 +110,12 @@ function createBackgroundWindow() {
 }
 
 function createWindow() {
-  
+
   settingsWindow = new BrowserWindow({
+    title: "Passage Shell",
     width: 400,
     height: 400,
+    titleBarStyle: 'hidden',
     webPreferences: {
       nodeIntegration: true
     }
@@ -136,7 +140,7 @@ function createWindow() {
   // Save a reference to the settings window contents
   settingsWebContents = settingsWindow.webContents;
 
-  // Emitted when the window is closed. 
+  // Emitted when the window is closed.
   settingsWindow.on('closed', () => {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
@@ -158,7 +162,7 @@ function createWindow() {
     // Send the loaded settings to the loader window
     settingsWebContents.send('async-remote-settings', settings);
 
-  });  
+  });
 
 }
 
@@ -175,7 +179,7 @@ function loadSettings() {
     let wasError = false;
 
     try {
-      
+
       // File exists, try to parse it
       settings = JSON.parse(contents);
 
@@ -223,7 +227,7 @@ function startServer() {
   });
 
   webApp.get('/file', (req, res) => {
-    
+
       // Send the file
       if(settings.file != null) {
 
@@ -252,6 +256,10 @@ function startServer() {
     res.json({"links": linksContents});
   });
 
+  webApp.get('/mouseover-links', (req, res) => {
+    res.json({"mouseover-links": mouseoverlinksContents});
+  });
+
   webApp.get('/undo', (req, res) => {
     res.json({"undo": undoContents});
     // Tell the rendered to 'undo'
@@ -259,10 +267,10 @@ function startServer() {
     // Just in case the server was started without
     //  loading the background window somehow
     if(webContents != null) {
-      webContents.send('async-remote-undo', true);      
+      webContents.send('async-remote-undo', true);
     }
 
-    
+
   });
 
   webApp.get('/redo', (req, res) => {
@@ -274,11 +282,15 @@ function startServer() {
     if(webContents != null) {
       webContents.send('async-remote-redo', true);
     }
-    
+
   });
 
   webApp.get('/error', (req, res) => {
     res.json({"error": errorContents});
+  });
+
+  webApp.get('/passage', (req, res) => {
+    res.json({"passage": passageContents});
   });
 
   webApp.get('/reset', (req, res) => {
@@ -286,9 +298,10 @@ function startServer() {
     // Reload the file based on the loader name
     //webContents.reload();
     createBackgroundWindow();
-    
+
   });
 
+  // Listen for click routes
   webApp.get('/click/:id', (req, res) => {
 
     // Just in case the server was started without
@@ -305,7 +318,7 @@ function startServer() {
       if(Number.isNaN(id)) {
         // Send an error message
         res.json({"error" : "Input not a number!"});
-        
+
       } else {
         // Post the response
         res.json({"click" : id});
@@ -313,7 +326,36 @@ function startServer() {
         // Send to the renderer to click the number
         webContents.send('async-remote-click', id);
       }
-    } 
+    }
+
+  });
+
+  // Listen for mouseover routes
+  webApp.get('/mouseover/:id', (req, res) => {
+
+    // Just in case the server was started without
+    //  loading the background window somehow
+    if(webContents != null) {
+
+      // Convert to number with a radix of 10
+      // This prevents people passing hexidecimal numbers.
+      // It will also round float-pointing numbers
+      let id = Number.parseInt(req.params.id, 10);
+
+      // Quick sanity check
+      // Input should ONLY be numbers
+      if(Number.isNaN(id)) {
+        // Send an error message
+        res.json({"error" : "Input not a number!"});
+
+      } else {
+        // Post the response
+        res.json({"mouseover" : id});
+
+        // Send to the renderer to click the number
+        webContents.send('async-remote-mouseover', id);
+      }
+    }
 
   });
 
@@ -363,11 +405,13 @@ app.on('activate', () => {
 // 'html': HTML content
 // 'text': text content
 // 'links': links content
+// 'mouseover-links': mouseover-links content
 // 'status': status content
 // 'server': switching webserver on and off
 // 'undo': is undoing possible?
 // 'redo': is redoing possible?
 // 'error': error channel
+// 'passage': passage content channel
 
 // Listen on the "async" channel for events
 ipcMain.on('async-main-html', (event, arg) => {
@@ -380,6 +424,10 @@ ipcMain.on('async-main-text', (event, arg) => {
 
 ipcMain.on('async-main-links', (event, arg) => {
   linksContents = arg;
+});
+
+ipcMain.on('async-main-mouseover-links', (event, arg) => {
+  mouseoverlinksContents = arg;
 });
 
 ipcMain.on('async-main-status', (event, arg) => {
@@ -396,6 +444,10 @@ ipcMain.on('async-main-redo', (event, arg) => {
 
 ipcMain.on('async-main-error', (event, arg) => {
   errorContents = arg;
+});
+
+ipcMain.on('async-main-passage', (event, arg) => {
+  passageContents = arg;
 });
 
 ipcMain.on('async-main-server', (event, arg) => {
@@ -426,4 +478,3 @@ ipcMain.on('async-main-server', (event, arg) => {
   }
 
 })
-

@@ -14,9 +14,12 @@
 			creatorVersion: ""
 		};
 
-		// More global linksArray that will be 
+		// More global linksArray that will be
 		//  re-populated after each detected 'click'
 		let linksArray = [];
+
+		// mouseover-links array
+		let mouseoverLinksArray = [];
 
 		// Set defaults
 		let iframeDocument = null;
@@ -124,14 +127,18 @@
 
 				// Erase previous links before re-populate
 				linksArray = [];
+				// Erase previous mouseover-links before re-populate
+				mouseoverLinksArray = [];
 				// Check for <tw-link> elements
 				let linksResults = passage.querySelectorAll("tw-link");
 				// Check for <a> elements
 				let aLinksResults = passage.querySelectorAll("a");
+				// Check for ".enchantment-mouseover" elements
+				let mouseoverResult = passage.querySelectorAll(".enchantment-mouseover");
 
 				// Move through the <a> elements
 				for(let k = 0;
-					k < aLinksResults.length; 
+					k < aLinksResults.length;
 					k++) {
 
 					linksArray.push({
@@ -142,7 +149,7 @@
 				}
 
 				// Move through the <tw-link> elements
-				for(let i = 0; 
+				for(let i = 0;
 					i < linksResults.length;
 					i++) {
 
@@ -153,8 +160,35 @@
 					});
 				}
 
+				// Move through the <tw-link> elements
+				for(let i = 0;
+					i < linksResults.length;
+					i++) {
+
+					linksArray.push({
+						"element": linksResults[i],
+						"text": linksResults[i].innerText,
+						"tagName": linksResults[i].tagName
+					});
+				}
+
+				// Move through the .enchantment-mouseover elements
+				for(let i = 0;
+					i < mouseoverResult.length;
+					i++) {
+
+					mouseoverLinksArray.push({
+						"element": mouseoverResult[i],
+						"text": mouseoverResult[i].innerText,
+						"tagName": mouseoverResult[i].tagName
+					});
+				}
+
 				// Send links content
 				ipcRenderer.send('async-main-links', linksArray);
+
+				// Send mouseover-links content
+				ipcRenderer.send('async-main-mouseover-links', mouseoverLinksArray);
 
 			}
 
@@ -162,7 +196,7 @@
 
 				// Clear the last error message
 				ipcRenderer.send('async-main-error', "");
-				
+
 				// Set a default value
 				let passage = null;
 
@@ -212,8 +246,8 @@
 				// 	arg should be greater than or equal to 0
 				// 	arg should be less than number of results
 				//	results should be more than 0
-				if(arg >= 0 && 
-				   arg < linksArray.length && 
+				if(arg >= 0 &&
+				   arg < linksArray.length &&
 				   linksArray.length > 0) {
 
 					var event = new MouseEvent('click', {
@@ -235,6 +269,40 @@
 				}
 
 				// Always refresh after a click event
+				refresh();
+
+			});
+
+			// Listen for a 'mouseover' event from main process
+			ipcRenderer.on('async-remote-mouseover', (event, arg) => {
+
+				// Do a sanity check
+				// 	arg should be greater than or equal to 0
+				// 	arg should be less than number of results
+				//	results should be more than 0
+				if(arg >= 0 &&
+				   arg < mouseoverLinksArray.length &&
+				   mouseoverLinksArray.length > 0) {
+
+					var event = new MouseEvent('mouseover', {
+						view: window,
+						bubbles: true,
+						cancelable: true
+					});
+
+					try {
+						// Click the link or link-like element
+						mouseoverLinksArray[arg].element.dispatchEvent(event);
+
+					} catch (event) {
+
+						ipcRenderer.send('async-main-error', "Could not mouseover link or link-like element!");
+
+					}
+
+				}
+
+				// Always refresh after a mouseover event
 				refresh();
 
 			});
@@ -295,7 +363,7 @@
 						// Refresh the contents after the action.
 						refresh();
 					}
-					
+
 
 				} else {
 
@@ -362,7 +430,7 @@
 						// Refresh the contents after the action.
 						refresh();
 					}
-					
+
 
 				} else {
 

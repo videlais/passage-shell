@@ -1,4 +1,4 @@
-# Passage Shell 1.2
+# Passage Shell 1.2.1
 
 Passage Shell is an [Electron](https://electronjs.org/)-based testing platform for Twine 2-based projects. Using [Express](https://expressjs.com/), Passage Shell can remotely "play" projects using a system of inter-process communication (IPC) channels to send information between its main and rendering processes.
 

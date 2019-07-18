@@ -1,6 +1,6 @@
 {
   "name": "passage-shell",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Passage Shell is a browser shell for running Twine projects.",
   "main": "main.js",
   "scripts": {

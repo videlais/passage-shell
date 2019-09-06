@@ -1,0 +1,36 @@
+{
+  "name": "passage-shell",
+  "version": "2.0.0",
+  "description": "Passage Shell is a browser shell for running Twine projects.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder ."
+  },
+  "repository": "",
+  "keywords": [
+    "Electron",
+    "Twine"
+  ],
+  "author": "Dan Cox",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^4.2.10",
+    "electron-builder": "^21.2.0"
+  },
+  "build": {
+    "appId": "passage-shell.desktop",
+    "mac": {
+      "category": "videlaisStudios.app.tool.testing"
+    },
+    "extraFiles": [
+      "settings/**/*",
+      "twine2/**/*",
+      "settings.json"
+    ]
+  },
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "postinstall": "electron-builder install-app-deps"
+}

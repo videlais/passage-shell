@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	 <title>Passage Shell</title>
+	 <link rel="stylesheet" href="css/winstrap.min.css?0.5.13" />
+	 <!-- Load Query via require for Electron environments with Node integration -->
+	 <script>window.$ = window.jQuery = require('./js/vendor/jquery.min.js');</script>
+</head>
+<body>
+	<div class="container">
+		<div class="row">
+			<div class="col-md-24">
+			  	<h1>Passage Shell</h1>
+					<div class="form-group">
+            <label for="portNumber">Port</label>
+            <input type="text" class="form-control" id="portNumber" placeholder="3000">
+        </div>
+			</div>
+			<hr>
+			<div class="col-md-24">
+				<p>Choose HTML File:</p>
+				<div class="form-group">
+					<form>
+						<label for="filepicker">
+							<input
+									id="filepicker"
+									type="file"
+									class="form-control">
+						</label>
+					</form>
+				</div>
+			</div>
+			<hr>
+			<div class="col-md-24 ">
+				<div class="form-group">
+					<p>Webserver:</p>
+			        <button type="button" data-toggle="button" class="btn btn-toggle-switch" disabled autocomplete="off" aria-pressed="false">
+			            <span class="stateLabel stateLabel-on">On</span>
+			            <span class="stateLabel stateLabel-off">Off</span>
+			        </button>
+					</div>
+				</div>
+			</div>
+			<script>
+
+				// Load the electron module with the ipcRenderer object
+				const { ipcRenderer } = require('electron');
+				// Set the initial state of the webserver
+				let serverOn = "stop";
+
+				$('button').on("click", () => {
+
+					if(serverOn == "run") {
+						ipcRenderer.send('async-main-server', "stop");
+						serverOn = "stop";
+
+						// Server has stopped, enable options
+						$("input").prop('disabled', false);
+
+					} else {
+						ipcRenderer.send('async-main-server', "run");
+						serverOn = "run";
+
+						// Can't change options while server is running
+						$("input").prop('disabled', true);
+					}
+
+				});
+
+				// Watch for form losing focus
+				$('#portNumber').blur( (event) => {
+
+					// If user click in and then out of field
+					//  without changing values.
+					if($('#portNumber').val() == "") {
+						$('#portNumber').val() = 3000;
+					}
+
+					// Convert string into number
+					var number = Number.parseInt($('#portNumber').val(), 10)
+
+					// Did they enter a NaN?
+					if(Number.isNaN(number) ) {
+
+							alert("Not a number!");
+
+					} else {
+
+						// Test port range
+						if(number < 1023 || number > 65535) {
+
+							alert("Port numbers should be greater than 1023 and less than 65535!");
+
+						} else {
+
+							// Send port number to main process!
+							ipcRenderer.send('async-main-port', number);
+
+						}
+
+					}
+
+				});
+
+				// Input file value was changed
+				// Send it to the main process
+				$('input:file').change( (event) => {
+
+					var path = event.target.files[0].path;
+
+					// Quick check. Only accept HTML files
+					if(path.includes(".html")) {
+							// Send the path
+							ipcRenderer.send('async-main-file', event.target.files[0].path );
+							// Switch on the button
+							$("button").attr("disabled", false);
+					} else {
+						// Warn users about non-HTML files.
+						alert("Only load file ending in .html!");
+					}
+
+				});
+
+				ipcRenderer.on('async-remote-button', (event, arg) => {
+					// Flip switch
+					$(".stateLabel-off").trigger("click");
+					// Flip inputs back on
+					$("input").prop('disabled', false);
+				});
+
+			</script>
+		</div>
+	</div>
+	<script src="js/vendor/bootstrap.min.js"></script>
+  <script src="js/app.js"></script></body>
+</body>
+</html>

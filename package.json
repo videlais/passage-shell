@@ -14,7 +14,7 @@
   "author": "Dan Cox",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^9.1.2",
+    "electron": "^10.1.0",
     "express": "^4.17.1"
   }
 }

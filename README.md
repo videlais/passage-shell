@@ -4,7 +4,7 @@ Passage Shell is an [Electron](https://electronjs.org/)-based testing platform f
 
 ## Routes
 
-The Express framework exposes the same routes across all loaders. However, not all functionality is available for all formats.
+The Express framework exposes the same routes across all loaders. However, not all functionality is available for all story formats.
 
 All routes return JSON-encoded values. Return objects are based on their route names except in the case of _/click/X_ and _/mouseover/X_, which can also return an error object, and _/file_, which only returns the static file.
 
@@ -20,7 +20,7 @@ All routes return JSON-encoded values. Return objects are based on their route n
 * _/error_: The latest error (if any) to occur
 * _/reset_: Reloads the file (but maintains webserver)
 * _/file_: The file from settings.json
-* _/source_: The inner HTML of the &lt;tw-storydata&gt; element
+* _/source_: The inner HTML of the `<tw-storydata/>` element
 
 ## Story Formats
 

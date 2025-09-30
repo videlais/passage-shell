@@ -5,6 +5,7 @@ const path = require('path');
 
 // Load up a webserver API
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const webApp = express();
 
 // Reference to httpServer returned by Express' listen()
@@ -229,19 +230,31 @@ function loadSettings() {
 }
 
 /**
- * Starts the Express web server and configures all API routes.
- * Sets up endpoints for serving files, getting content data, handling click events,
+ * Starts the Express server with all route handlers for API endpoints.
+ * Creates routes for serving files, retrieving content, and handling undo/redo operations.
+ * Sets up static file serving and error handling middleware. Responsible for server initialization
  * and managing server lifecycle. Also starts the HTTP server on the configured port.
  * 
  * @returns {void}
  */
 function startServer() {
 
+  // Create rate limiter for file endpoint - 100 requests per 15 minutes
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: {
+      error: 'Too many file requests from this IP, please try again later.'
+    },
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false // Disable the `X-RateLimit-*` headers
+  });
+
   webApp.get('/', (req, res) => {
     res.json(statusContents);
   });
 
-  webApp.get('/file', (req, res, next) => {
+  webApp.get('/file', limiter, (req, res, next) => {
 
       // Send the file
       if(settings.file != null) {

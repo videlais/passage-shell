@@ -165,7 +165,7 @@ describe('Extended Coverage Tests', () => {
     test('should set up all Express routes', () => {
       // Expect all the routes to be registered
       expect(mockExpressApp.get).toHaveBeenCalledWith('/', expect.any(Function));
-      expect(mockExpressApp.get).toHaveBeenCalledWith('/file', expect.any(Function));
+      expect(mockExpressApp.get).toHaveBeenCalledWith('/file', expect.any(Function), expect.any(Function));
       expect(mockExpressApp.get).toHaveBeenCalledWith('/text', expect.any(Function));
       expect(mockExpressApp.get).toHaveBeenCalledWith('/html', expect.any(Function));
       expect(mockExpressApp.get).toHaveBeenCalledWith('/source', expect.any(Function));

@@ -35,5 +35,8 @@
       "**/__tests__/**/*.js",
       "**/?(*.)+(spec|test).js"
     ]
+  },
+  "dependencies": {
+    "express-rate-limit": "^8.1.0"
   }
 }

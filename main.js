@@ -36,7 +36,13 @@ var webContents = null;
 var settingsWindow = null;
 var settingsWebContents = null;
 
-// Create (or re-create) the background window
+/**
+ * Creates or re-creates the background window for the Electron application.
+ * This window loads the Twine2 project and handles file validation.
+ * The window is created hidden and validates that the settings file exists and uses absolute paths.
+ * 
+ * @returns {boolean} Returns true if window creation was successful, false if file validation failed.
+ */
 function createBackgroundWindow() {
 
   let creationSuccessful = true;
@@ -98,6 +104,13 @@ function createBackgroundWindow() {
 
 }
 
+/**
+ * Creates the main settings window for the Passage Shell application.
+ * This window provides the user interface for configuring application settings.
+ * It also initializes the server and background window after the settings are loaded.
+ * 
+ * @returns {void}
+ */
 function createWindow() {
 
   settingsWindow = new BrowserWindow({
@@ -154,6 +167,13 @@ function createWindow() {
 
 }
 
+/**
+ * Loads and validates application settings from the settings.json file.
+ * Parses the JSON configuration, validates the port number, and sets server readiness status.
+ * Shows error dialogs for missing files, malformed JSON, or invalid port numbers.
+ * 
+ * @returns {void}
+ */
 function loadSettings() {
 
   // Sanity check
@@ -171,7 +191,7 @@ function loadSettings() {
       // File exists, try to parse it
       settings = JSON.parse(contents);
 
-    } catch (event) {
+    } catch {
 
       // File was malformed or some other error occured
       wasError = true;
@@ -208,13 +228,20 @@ function loadSettings() {
 
 }
 
+/**
+ * Starts the Express web server and configures all API routes.
+ * Sets up endpoints for serving files, getting content data, handling click events,
+ * and managing server lifecycle. Also starts the HTTP server on the configured port.
+ * 
+ * @returns {void}
+ */
 function startServer() {
 
   webApp.get('/', (req, res) => {
     res.json(statusContents);
   });
 
-  webApp.get('/file', (req, res) => {
+  webApp.get('/file', (req, res, next) => {
 
       // Send the file
       if(settings.file != null) {
@@ -352,7 +379,7 @@ function startServer() {
   });
 
   // Catch-all for trying routes that don't exist
-  webApp.use((req, res, next) => {
+  webApp.use((req, res, _next) => {
     res.status(404).json({"error": "Not a valid route!"});
   });
 
@@ -382,7 +409,7 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
-})
+});
 
 app.on('activate', () => {
   // On macOS it's common to re-create a window in the app when the
@@ -474,4 +501,4 @@ ipcMain.on('async-main-server', (event, arg) => {
 
   }
 
-})
+});

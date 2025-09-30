@@ -133,7 +133,7 @@
     // Star rating
     (function () {
         $('.rating-btn').on('mouseenter', function () {
-            var active = $(this);
+            var _active = $(this);
 
             // Highlight the hovered star and the previous stars
             $(this).prevAll('.rating-btn').addClass('active');

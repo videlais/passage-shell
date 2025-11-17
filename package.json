@@ -19,7 +19,7 @@
   "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^9.36.0",
-    "electron": "^38.2.0",
+    "electron": "^39.2.1",
     "eslint": "^9.36.0",
     "eslint-plugin-jsdoc": "^60.6.0",
     "express": "^5.1.0",

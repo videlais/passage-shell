@@ -1,0 +1,45 @@
+[
+  {
+    "type": "getText",
+    "selector": "#story",
+    "description": "Get initial passage text"
+  },
+  {
+    "type": "getLinks",
+    "description": "Get all available choices"
+  },
+  {
+    "type": "click",
+    "selector": "text=Go left",
+    "description": "Choose the left path"
+  },
+  {
+    "type": "wait",
+    "ms": 100,
+    "description": "Wait for transition"
+  },
+  {
+    "type": "getText",
+    "selector": ".passage:not(.hidden)",
+    "description": "Get forest passage text"
+  },
+  {
+    "type": "screenshot",
+    "path": "examples/forest-screenshot.png",
+    "description": "Take screenshot of forest passage"
+  },
+  {
+    "type": "click",
+    "selector": "text=Continue deeper",
+    "description": "Go deeper into forest"
+  },
+  {
+    "type": "wait",
+    "ms": 100
+  },
+  {
+    "type": "getText",
+    "selector": ".passage:not(.hidden)",
+    "description": "Get clearing passage text"
+  }
+]

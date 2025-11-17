@@ -1,31 +1,45 @@
 {
   "name": "passage-shell",
-  "version": "1.2.1",
-  "description": "Passage Shell is a browser shell for running Twine projects.",
-  "main": "main.js",
-  "scripts": {
-    "start": "electron .",
-    "test": "jest --coverage",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "all": "npm run lint && npm run test"
+  "version": "2.0.0",
+  "description": "CLI tool for automated testing of HTML-based interactive fiction projects.",
+  "type": "module",
+  "main": "src/runner.js",
+  "bin": {
+    "passage-shell": "./cli.js"
   },
-  "repository": "",
+  "scripts": {
+    "start": "node cli.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --testPathIgnorePatterns=/test/main",
+    "test:runner": "node --experimental-vm-modules node_modules/jest/bin/jest.js test/runner.test.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/videlais/passage-shell.git"
+  },
   "keywords": [
-    "Electron",
-    "Twine"
+    "interactive-fiction",
+    "twine",
+    "testing",
+    "cli",
+    "playwright"
   ],
   "author": "Dan Cox",
   "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
-    "electron": "^39.2.1",
     "eslint": "^9.39.1",
     "eslint-plugin-jsdoc": "^61.2.1",
-    "express": "^5.1.0",
     "globals": "^16.5.0",
-    "jest": "^30.2.0",
-    "supertest": "^7.1.4"
+    "jest": "^30.2.0"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.48.0",
+    "commander": "^12.1.0"
   },
   "jest": {
     "testEnvironment": "node",
@@ -34,9 +48,13 @@
     "testMatch": [
       "**/__tests__/**/*.js",
       "**/?(*.)+(spec|test).js"
+    ],
+    "transform": {},
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/test/main.test.js",
+      "/test/main.extended.test.js",
+      "/test/main.integration.test.js"
     ]
-  },
-  "dependencies": {
-    "express-rate-limit": "^8.2.1"
   }
 }

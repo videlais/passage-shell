@@ -1,53 +1,220 @@
-# Passage Shell 1.2.1
+# Passage Shell 2.0
 
-Passage Shell is an [Electron](https://electronjs.org/)-based testing platform for Twine 2-based projects. Using [Express](https://expressjs.com/), Passage Shell can remotely "play" projects using a system of inter-process communication (IPC) channels to send information between its main and rendering processes.
+A minimal CLI tool for automated testing of HTML-based interactive fiction projects (Twine, Ink, ChoiceScript, etc.).
 
-## Routes
+## Features
 
-The Express framework exposes the same routes across all loaders. However, not all functionality is available for all formats.
+- 🎯 **Simple CLI** - No GUI, no server, just actions
+- 🚀 **Playwright-powered** - Modern browser automation
+- 📝 **JSON-based actions** - Define tests in simple JSON files
+- 🔍 **Multiple action types** - Click, type, screenshot, and more
+- 🎭 **Headless or visual** - Run tests in background or watch them execute
+- 📊 **JSON results** - Machine-readable output for CI/CD
 
-All routes return JSON-encoded values. Return objects are based on their route names except in the case of _/click/X_ and _/mouseover/X_, which can also return an error object, and _/file_, which only returns the static file.
+## Installation
 
-* _/_: Information about the file
-* _/text_: The current text of the passage
-* _/html_: The current HTML of the passage
-* _/links_: Listing of all links (or link-like) elements in story area
-* _/mouseover-links_: Listing of all the mouseover links in the story area
-* _/click/X_: The numbered (starting from 0) of the entry of the link (from /links) to "click"
-* _/mouseover/X_: The numbered (starting from 0) of the entry of the mouseover-link (from /mouseover-links) to "mouseover"
-* _/undo_: Attempts to "undo" based on file and loader
-* _/redo_: Attempts to "redo" based on file and loader
-* _/error_: The latest error (if any) to occur
-* _/reset_: Reloads the file (but maintains webserver)
-* _/file_: The file from settings.json
-* _/source_: The inner HTML of the &lt;tw-storydata&gt; element
+```bash
+npm install
+npx playwright install chromium
+```
 
-## Story Formats
+## Quick Start
 
-Passage Shell currently supports the following story formats:
+1. **Generate an example actions file:**
+```bash
+node cli.js example
+```
 
-* Harlowe
-* SugarCube
-* Snowman
+2. **Run actions on your HTML file:**
+```bash
+node cli.js run your-story.html actions.json
+```
 
-## Settings
+## Usage
 
-The [settings.json](settings.json) holds the options of _port_ and _file_.
+```bash
+node cli.js run <html-file> <actions-file> [options]
 
-* _port_: Port number for the webserver
-* _file_: The static file to serve. **Must** be an absolute path.
+Options:
+  -h, --headless       Run in headless mode (default: true)
+  -s, --slow-mo <ms>   Slow down operations (default: 0)
+  -o, --output <file>  Save results to JSON file
+  -v, --verbose        Show detailed output
+```
 
-Passage Shell **will not** run without proper settings and attempts to prevent invalid values.
+### Example Commands
 
-## Testing
+```bash
+# Run with visible browser
+node cli.js run story.html actions.json --headless false
 
-Every other route but _/file_ communicates with the renderer process. Therefore, it is possible to work with the other routes and "play" the file served by _/file_ without interfering with each other.
+# Run slowly to watch actions
+node cli.js run story.html actions.json --slow-mo 500 --headless false
 
-## Instructions
+# Save results to file
+node cli.js run story.html actions.json -o results.json
 
-Run ```npm install``` to prepare dependencies and then ```npm start``` to run.
+# Verbose output
+node cli.js run story.html actions.json -v
+```
 
-Because of loading times and different formats using transitions, it is recommended to poll every 10ms or more.
+## Action Types
+
+Create a JSON file with an array of actions:
+
+```json
+[
+  {
+    "type": "getText",
+    "selector": "body",
+    "description": "Get page text"
+  },
+  {
+    "type": "click",
+    "selector": "text=Start",
+    "description": "Click start link"
+  },
+  {
+    "type": "wait",
+    "ms": 500,
+    "description": "Wait for transition"
+  },
+  {
+    "type": "getLinks",
+    "description": "Get all links"
+  },
+  {
+    "type": "screenshot",
+    "path": "screenshot.png",
+    "description": "Take screenshot"
+  }
+]
+```
+
+### Supported Actions
+
+| Action | Description | Parameters |
+|--------|-------------|------------|
+| `click` | Click an element | `selector` |
+| `getText` | Get text content | `selector` |
+| `getHTML` | Get HTML content | `selector` |
+| `getLinks` | Get all links | - |
+| `type` | Type into input | `selector`, `text` |
+| `wait` | Wait milliseconds | `ms` |
+| `waitForSelector` | Wait for element | `selector`, `timeout?` |
+| `screenshot` | Take screenshot | `path` |
+| `hover` | Hover over element | `selector` |
+| `getAttribute` | Get attribute value | `selector`, `attribute` |
+| `evaluate` | Run JavaScript | `script` |
+| `select` | Select dropdown option | `selector`, `value` |
+| `check` | Check checkbox | `selector` |
+| `uncheck` | Uncheck checkbox | `selector` |
+| `goBack` | Browser back | - |
+| `goForward` | Browser forward | - |
+| `reload` | Reload page | - |
+
+### Selectors
+
+Playwright supports multiple selector types:
+- **Text**: `text=Start` or `"text=Click me"`
+- **CSS**: `.passage` or `#story`
+- **XPath**: `//a[contains(text(), "Next")]`
+- **Data attributes**: `[data-passage="intro"]`
+
+## Examples
+
+### Testing a Twine Story
+
+```json
+[
+  {
+    "type": "getText",
+    "selector": "tw-story",
+    "description": "Get initial passage"
+  },
+  {
+    "type": "click",
+    "selector": "text=Begin",
+    "description": "Start the story"
+  },
+  {
+    "type": "wait",
+    "ms": 300
+  },
+  {
+    "type": "getLinks",
+    "description": "Get available choices"
+  },
+  {
+    "type": "click",
+    "selector": "tw-link >> nth=0",
+    "description": "Click first choice"
+  }
+]
+```
+
+### Testing Any HTML Interactive Fiction
+
+```json
+[
+  {
+    "type": "waitForSelector",
+    "selector": "#story",
+    "description": "Wait for story to load"
+  },
+  {
+    "type": "getText",
+    "selector": "#story",
+    "description": "Get current text"
+  },
+  {
+    "type": "click",
+    "selector": "a.choice",
+    "description": "Click a choice link"
+  },
+  {
+    "type": "screenshot",
+    "path": "after-choice.png"
+  }
+]
+```
+
+## Output
+
+With `--verbose` or `--output`, you get structured results:
+
+```json
+[
+  {
+    "action": "getText",
+    "description": "Get page text",
+    "result": {
+      "text": "Welcome to the story..."
+    }
+  },
+  {
+    "action": "click",
+    "description": "Click start",
+    "result": {
+      "clicked": "text=Start"
+    }
+  }
+]
+```
+
+## Migrating from v1.x
+
+Version 2.0 is a complete rewrite:
+- ❌ No more Electron or Express server
+- ❌ No more settings.json or GUI
+- ✅ Simple CLI with JSON actions
+- ✅ Playwright instead of Electron
+- ✅ Direct file execution
+
+## Requirements
+
+- Node.js >= 18
+- Playwright (auto-installed with npm install)
 
 ## License
 

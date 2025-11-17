@@ -1,0 +1,21 @@
+[
+  {
+    "type": "getText",
+    "selector": "body",
+    "description": "Get initial page text"
+  },
+  {
+    "type": "click",
+    "selector": "text=Start",
+    "description": "Click the 'Start' link"
+  },
+  {
+    "type": "wait",
+    "ms": 500,
+    "description": "Wait for transition"
+  },
+  {
+    "type": "getLinks",
+    "description": "Get all available links"
+  }
+]

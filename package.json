@@ -40,6 +40,6 @@
   },
   "dependencies": {
     "@playwright/test": "^1.48.0",
-    "commander": "^12.1.0"
+    "commander": "^14.0.2"
   }
 }

@@ -1,15 +1,6 @@
-# Passage Shell 2.0
+# Passage Shell
 
-A minimal CLI tool for automated testing of HTML-based interactive fiction projects (Twine, Ink, ChoiceScript, etc.).
-
-## Features
-
-- 🎯 **Simple CLI** - No GUI, no server, just actions
-- 🚀 **Playwright-powered** - Modern browser automation
-- 📝 **JSON-based actions** - Define tests in simple JSON files
-- 🔍 **Multiple action types** - Click, type, screenshot, and more
-- 🎭 **Headless or visual** - Run tests in background or watch them execute
-- 📊 **JSON results** - Machine-readable output for CI/CD
+A minimal CLI tool for automated testing of HTML-based interactive fiction projects (Twine, ink, ChoiceScript, etc.).
 
 ## Installation
 
@@ -20,12 +11,14 @@ npx playwright install chromium
 
 ## Quick Start
 
-1. **Generate an example actions file:**
+**Generate an example actions file:**
+
 ```bash
 node cli.js example
 ```
 
-2. **Run actions on your HTML file:**
+**Run actions on your HTML file:**
+
 ```bash
 node cli.js run your-story.html actions.json
 ```
@@ -116,6 +109,7 @@ Create a JSON file with an array of actions:
 ### Selectors
 
 Playwright supports multiple selector types:
+
 - **Text**: `text=Start` or `"text=Click me"`
 - **CSS**: `.passage` or `#story`
 - **XPath**: `//a[contains(text(), "Next")]`
@@ -201,15 +195,6 @@ With `--verbose` or `--output`, you get structured results:
   }
 ]
 ```
-
-## Migrating from v1.x
-
-Version 2.0 is a complete rewrite:
-- ❌ No more Electron or Express server
-- ❌ No more settings.json or GUI
-- ✅ Simple CLI with JSON actions
-- ✅ Playwright instead of Electron
-- ✅ Direct file execution
 
 ## Requirements
 

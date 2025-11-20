@@ -2,11 +2,11 @@ import { chromium } from '@playwright/test';
 import { existsSync } from 'fs';
 
 /**
- * Execute a series of actions on an HTML file using Playwright
- * @param {string} htmlPath - Absolute path to the HTML file
- * @param {Array} actions - Array of action objects
- * @param {Object} options - Configuration options
- * @returns {Promise<Array>} Results from each action
+ * Execute a series of actions on an HTML file using Playwright.
+ * @param {string} htmlPath - Absolute path to the HTML file.
+ * @param {Array} actions - Array of action objects.
+ * @param {object} options - Configuration options.
+ * @returns {Promise<Array>} Results from each action.
  */
 export async function runActions(htmlPath, actions, options = {}) {
   const { headless = true, slowMo = 0, verbose = false } = options;
@@ -51,11 +51,11 @@ export async function runActions(htmlPath, actions, options = {}) {
 }
 
 /**
- * Execute a single action on a page
- * @param {Page} page - Playwright page object
- * @param {Object} action - Action to execute
- * @param {boolean} verbose - Whether to log details
- * @returns {Promise<any>} Result of the action
+ * Execute a single action on a page.
+ * @param {Page} page - Playwright page object.
+ * @param {object} action - Action to execute.
+ * @param {boolean} verbose - Whether to log details.
+ * @returns {Promise<any>} Result of the action.
  */
 async function executeAction(page, action, verbose = false) {
   switch (action.type) {
@@ -75,7 +75,7 @@ async function executeAction(page, action, verbose = false) {
       return { html };
       
     case 'getLinks':
-      const links = await page.$$eval('a', (elements) => 
+      const links = await page.$$eval('a', /* istanbul ignore next */ (elements) => 
         elements.map(el => ({
           text: el.textContent.trim(),
           href: el.getAttribute('href')

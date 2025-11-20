@@ -25,7 +25,7 @@
   },
   {
     "type": "screenshot",
-    "path": "examples/forest-screenshot.png",
+    "path": "forest-screenshot.png",
     "description": "Take screenshot of forest passage"
   },
   {

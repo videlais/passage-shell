@@ -17,6 +17,53 @@ export default [
   // Main configuration
   js.configs.recommended,
   
+  // Source files (ES modules)
+  {
+    files: ["src/**/*.js", "cli.js"],
+    plugins: {
+      jsdoc
+    },
+    languageOptions: {
+      globals: {
+        ...globals.node
+      },
+      ecmaVersion: 2022,
+      sourceType: "module"
+    },
+    rules: {
+      "semi": ["error", "always"],
+      "semi-spacing": "error", 
+      "no-extra-semi": "error",
+      "no-unused-vars": ["error", { 
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_" 
+      }],
+      "no-undef": "error",
+      "no-case-declarations": "off", // Allow const/let in case blocks
+      // JSDoc rules
+      "jsdoc/require-jsdoc": ["error", {
+        "require": {
+          "FunctionDeclaration": true,
+          "MethodDefinition": true,
+          "ClassDeclaration": true,
+          "ArrowFunctionExpression": false,
+          "FunctionExpression": false
+        }
+      }],
+      "jsdoc/require-description": "error",
+      "jsdoc/require-description-complete-sentence": "error",
+      "jsdoc/require-param": "error",
+      "jsdoc/require-param-description": "error",
+      "jsdoc/require-param-type": "error",
+      "jsdoc/require-returns": "error",
+      "jsdoc/require-returns-description": "error",
+      "jsdoc/require-returns-type": "error",
+      "jsdoc/check-param-names": "error",
+      "jsdoc/check-types": "error",
+      "jsdoc/valid-types": "error"
+    }
+  },
+  
   // Node.js files (main.js)
   {
     files: ["main.js"],
@@ -70,7 +117,8 @@ export default [
         ...globals.node,
         ...globals.jest
       },
-      sourceType: "commonjs"
+      ecmaVersion: 2022,
+      sourceType: "module"
     },
     rules: {
       "no-unused-vars": "off", // Allow unused vars in test files

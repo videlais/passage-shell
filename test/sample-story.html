@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Interactive Story</title>
+  <style>
+    body {
+      font-family: Georgia, serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .passage {
+      margin: 20px 0;
+    }
+    a {
+      color: #0066cc;
+      text-decoration: none;
+      border-bottom: 1px dotted;
+    }
+    a:hover {
+      color: #004499;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="story">
+    <div id="passage-1" class="passage">
+      <h1>The Beginning</h1>
+      <p>You stand at a crossroads. The sun is setting, casting long shadows across the path.</p>
+      <p><a href="#" onclick="showPassage(2); return false;">Go left</a></p>
+      <p><a href="#" onclick="showPassage(3); return false;">Go right</a></p>
+    </div>
+    
+    <div id="passage-2" class="passage hidden">
+      <h1>The Forest</h1>
+      <p>You walk into a dark forest. The trees whisper secrets.</p>
+      <p><a href="#" onclick="showPassage(4); return false;">Continue deeper</a></p>
+      <p><a href="#" onclick="showPassage(1); return false;">Go back</a></p>
+    </div>
+    
+    <div id="passage-3" class="passage hidden">
+      <h1>The Village</h1>
+      <p>You arrive at a small village. People are gathering in the square.</p>
+      <p><a href="#" onclick="showPassage(5); return false;">Join them</a></p>
+      <p><a href="#" onclick="showPassage(1); return false;">Go back</a></p>
+    </div>
+    
+    <div id="passage-4" class="passage hidden">
+      <h1>The Clearing</h1>
+      <p>You find a clearing with a mysterious stone altar.</p>
+      <p>The End (for now)</p>
+    </div>
+    
+    <div id="passage-5" class="passage hidden">
+      <h1>The Celebration</h1>
+      <p>The villagers welcome you with open arms. A feast is beginning!</p>
+      <p>The End (for now)</p>
+    </div>
+  </div>
+
+  <script>
+    function showPassage(id) {
+      const passages = document.querySelectorAll('.passage');
+      passages.forEach(p => p.classList.add('hidden'));
+      document.getElementById('passage-' + id).classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>

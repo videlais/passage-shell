@@ -132,6 +132,16 @@ dist
 # Electron-builder output
 dist_electron/
 
+# Playwright
+playwright-report/
+test-results/
+*.png
+!examples/*.png
+
+# Test files
+test-story.html
+results.json
+
 # IDE and Editor files
 .vscode/
 .idea/

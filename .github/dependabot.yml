@@ -1,7 +1,37 @@
 version: 2
 updates:
-- package-ecosystem: npm
-  directory: "/"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    versioning-strategy: increase
+    commit-message:
+      prefix: "npm"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "npm"
+    reviewers:
+      - "videlais"
+    pull-request-branch-name:
+      separator: "-"
+    groups:
+      playwright:
+        patterns:
+          - "@playwright/*"
+      babel:
+        patterns:
+          - "@babel/*"
+          - "babel-*"
+      eslint:
+        patterns:
+          - "eslint*"
+          - "@eslint/*"
+      testing:
+        patterns:
+          - "jest"
+          - "@types/jest"

@@ -33,7 +33,7 @@
     "@babel/preset-env": "^7.29.0",
     "@eslint/js": "^10.0.1",
     "electron": "^40.6.1",
-    "eslint": "^10.0.2",
+    "eslint": "^10.0.3",
     "eslint-plugin-jsdoc": "^62.7.1",
     "express": "^5.2.1",
     "globals": "^17.4.0",

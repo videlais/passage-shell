@@ -16,6 +16,43 @@ export default [
   
   // Main configuration
   js.configs.recommended,
+
+  // Web server files (allow concise internal helpers)
+  {
+    files: ["src/web/**/*.js"],
+    plugins: {
+      jsdoc
+    },
+    languageOptions: {
+      globals: {
+        ...globals.node
+      },
+      ecmaVersion: 2022,
+      sourceType: "module"
+    },
+    rules: {
+      "semi": ["error", "always"],
+      "semi-spacing": "error",
+      "no-extra-semi": "error",
+      "no-unused-vars": ["error", {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }],
+      "no-undef": "error",
+      "jsdoc/require-jsdoc": "off",
+      "jsdoc/require-description": "off",
+      "jsdoc/require-description-complete-sentence": "off",
+      "jsdoc/require-param": "off",
+      "jsdoc/require-param-description": "off",
+      "jsdoc/require-param-type": "off",
+      "jsdoc/require-returns": "off",
+      "jsdoc/require-returns-description": "off",
+      "jsdoc/require-returns-type": "off",
+      "jsdoc/check-param-names": "off",
+      "jsdoc/check-types": "off",
+      "jsdoc/valid-types": "off"
+    }
+  },
   
   // Source files (ES modules)
   {
@@ -106,6 +143,25 @@ export default [
       "jsdoc/check-param-names": "error",
       "jsdoc/check-types": "error",
       "jsdoc/valid-types": "error"
+    }
+  },
+
+  // Web server files override (must come after main src rules)
+  {
+    files: ["src/web/**/*.js"],
+    rules: {
+      "jsdoc/require-jsdoc": "off",
+      "jsdoc/require-description": "off",
+      "jsdoc/require-description-complete-sentence": "off",
+      "jsdoc/require-param": "off",
+      "jsdoc/require-param-description": "off",
+      "jsdoc/require-param-type": "off",
+      "jsdoc/require-returns": "off",
+      "jsdoc/require-returns-description": "off",
+      "jsdoc/require-returns-type": "off",
+      "jsdoc/check-param-names": "off",
+      "jsdoc/check-types": "off",
+      "jsdoc/valid-types": "off"
     }
   },
   

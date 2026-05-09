@@ -2,6 +2,108 @@ import { chromium } from '@playwright/test';
 import { existsSync } from 'fs';
 
 /**
+ * Build a structured action error for reporting.
+ * @param {number} index - Action index.
+ * @param {object} action - Action object.
+ * @param {Error} error - Original error.
+ * @returns {object} Structured action error details.
+ */
+function buildActionError(index, action, error) {
+  return {
+    index,
+    action: action?.type,
+    description: action?.description,
+    message: error instanceof Error ? error.message : String(error)
+  };
+}
+
+/**
+ * Emit structured runner events while remaining optional.
+ * @param {Function|undefined} onEvent - Event callback.
+ * @param {object} event - Event payload.
+ * @returns {void} No return value.
+ */
+function emitEvent(onEvent, event) {
+  if (typeof onEvent === 'function') {
+    onEvent({
+      at: new Date().toISOString(),
+      ...event
+    });
+  }
+}
+
+/**
+ * Internal action loop that can either throw or return partial failures.
+ * @param {import('@playwright/test').Page} page - Playwright page.
+ * @param {Array} actions - Action list.
+ * @param {boolean} verbose - Verbose output.
+ * @param {Function|undefined} onEvent - Optional event callback.
+ * @param {boolean} throwOnActionError - Whether action errors should throw.
+ * @returns {Promise<{results:Array, error?:object}>} Results and optional error details.
+ */
+async function executeActions(page, actions, verbose, onEvent, throwOnActionError) {
+  const results = [];
+
+  for (let i = 0; i < actions.length; i++) {
+    const action = actions[i];
+    const label = action.description || action.type;
+
+    if (verbose) {
+      console.log(`[${i + 1}/${actions.length}] ${label}`);
+    }
+
+    emitEvent(onEvent, {
+      level: 'info',
+      type: 'action-start',
+      index: i,
+      total: actions.length,
+      action: action.type,
+      description: action.description
+    });
+
+    try {
+      const result = await executeAction(page, action, verbose);
+      const actionResult = {
+        action: action.type,
+        description: action.description,
+        result
+      };
+
+      results.push(actionResult);
+
+      emitEvent(onEvent, {
+        level: 'info',
+        type: 'action-success',
+        index: i,
+        total: actions.length,
+        action: action.type,
+        description: action.description,
+        result
+      });
+    } catch (error) {
+      const actionError = buildActionError(i, action, error);
+
+      emitEvent(onEvent, {
+        level: 'error',
+        type: 'action-error',
+        ...actionError
+      });
+
+      if (throwOnActionError) {
+        throw error;
+      }
+
+      return {
+        results,
+        error: actionError
+      };
+    }
+  }
+
+  return { results };
+}
+
+/**
  * Execute a series of actions on an HTML file using Playwright.
  * @param {string} htmlPath - Absolute path to the HTML file.
  * @param {Array} actions - Array of action objects.
@@ -9,45 +111,60 @@ import { existsSync } from 'fs';
  * @returns {Promise<Array>} Results from each action.
  */
 export async function runActions(htmlPath, actions, options = {}) {
-  const { headless = true, slowMo = 0, verbose = false } = options;
-  
+  const { headless = true, slowMo = 0, verbose = false, onEvent } = options;
+
   if (!existsSync(htmlPath)) {
     throw new Error(`HTML file not found: ${htmlPath}`);
   }
-  
+
   const browser = await chromium.launch({ 
     headless,
     slowMo 
   });
-  
+
   const context = await browser.newContext();
   const page = await context.newPage();
-  
+
   // Navigate to the HTML file
   await page.goto(`file://${htmlPath}`);
-  
-  const results = [];
-  
+
   try {
-    for (let i = 0; i < actions.length; i++) {
-      const action = actions[i];
-      
-      if (verbose) {
-        console.log(`[${i + 1}/${actions.length}] ${action.description || action.type}`);
-      }
-      
-      const result = await executeAction(page, action, verbose);
-      results.push({
-        action: action.type,
-        description: action.description,
-        result
-      });
-    }
+    const run = await executeActions(page, actions, verbose, onEvent, true);
+    return run.results;
   } finally {
     await browser.close();
   }
-  
-  return results;
+}
+
+/**
+ * Execute actions and return partial results instead of throwing action errors.
+ * @param {string} htmlPath - Absolute path to the HTML file.
+ * @param {Array} actions - Array of action objects.
+ * @param {object} options - Configuration options.
+ * @returns {Promise<{results:Array, error?:object}>} Results plus optional failure details.
+ */
+export async function runActionsDetailed(htmlPath, actions, options = {}) {
+  const { headless = true, slowMo = 0, verbose = false, onEvent } = options;
+
+  if (!existsSync(htmlPath)) {
+    throw new Error(`HTML file not found: ${htmlPath}`);
+  }
+
+  const browser = await chromium.launch({
+    headless,
+    slowMo
+  });
+
+  const context = await browser.newContext();
+  const page = await context.newPage();
+
+  await page.goto(`file://${htmlPath}`);
+
+  try {
+    return await executeActions(page, actions, verbose, onEvent, false);
+  } finally {
+    await browser.close();
+  }
 }
 
 /**

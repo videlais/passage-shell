@@ -9,6 +9,10 @@
   },
   "scripts": {
     "start": "node cli.js",
+    "start:web": "node src/web/server.js",
+    "dev:web": "vite",
+    "build:web": "vite build",
+    "preview:web": "vite preview",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "lint": "eslint ./src --fix",
     "all": "npm run lint && npm run test"
@@ -29,18 +33,23 @@
     "node": ">=18.0.0"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.4",
     "@babel/core": "^7.29.0",
-    "@babel/preset-env": "^7.29.3",
+    "@babel/preset-env": "^7.29.5",
     "@eslint/js": "^10.0.1",
-    "electron": "^41.5.0",
+    "electron": "^42.0.1",
     "eslint": "^10.3.0",
     "eslint-plugin-jsdoc": "^62.9.0",
-    "express": "^5.2.1",
     "globals": "^17.6.0",
-    "jest": "^30.3.0"
+    "jest": "^30.4.1",
+    "vite": "^7.1.10"
   },
   "dependencies": {
     "@playwright/test": "^1.59.1",
-    "commander": "^14.0.3"
+    "commander": "^14.0.3",
+    "express": "^5.2.1",
+    "multer": "^2.0.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   }
 }

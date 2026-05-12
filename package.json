@@ -42,7 +42,7 @@
     "eslint-plugin-jsdoc": "^62.9.0",
     "globals": "^17.6.0",
     "jest": "^30.4.1",
-    "vite": "^7.1.10"
+    "vite": "^8.0.12"
   },
   "dependencies": {
     "@playwright/test": "^1.59.1",

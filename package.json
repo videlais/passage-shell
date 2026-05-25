@@ -34,8 +34,8 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.2",
-    "@babel/core": "^7.29.0",
-    "@babel/preset-env": "^7.29.5",
+    "@babel/core": "^7.29.7",
+    "@babel/preset-env": "^7.29.7",
     "@eslint/js": "^10.0.1",
     "electron": "^42.1.0",
     "eslint": "^10.4.0",

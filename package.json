@@ -39,7 +39,7 @@
     "@eslint/js": "^10.0.1",
     "electron": "^42.4.1",
     "eslint": "^10.5.0",
-    "eslint-plugin-jsdoc": "^63.0.2",
+    "eslint-plugin-jsdoc": "^63.0.7",
     "globals": "^17.6.0",
     "jest": "^30.4.2",
     "vite": "^8.0.16"

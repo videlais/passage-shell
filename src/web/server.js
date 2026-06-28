@@ -306,8 +306,14 @@ if (existsSync(webDistDir)) {
   });
 }
 
-const port = process.env.PORT || 3001;
+const isMainModule = process.argv[1] && resolve(process.argv[1]) === __filename;
 
-app.listen(port, () => {
-  console.log(`passage-shell web server running at http://localhost:${port}`);
-});
+if (isMainModule) {
+  const port = process.env.PORT || 3001;
+
+  app.listen(port, () => {
+    console.log(`passage-shell web server running at http://localhost:${port}`);
+  });
+}
+
+export { app };

@@ -1,7 +1,8 @@
-import { runActions } from '../src/runner.js';
+import { runActions, runActionsDetailed } from '../src/runner.js';
 import { existsSync } from 'fs';
-import { writeFile, unlink, readFile } from 'fs/promises';
+import { writeFile, unlink, readFile, mkdtemp } from 'fs/promises';
 import { join } from 'path';
+import { tmpdir } from 'os';
 
 // Mock HTML file for testing
 const testHtml = `
@@ -43,10 +44,12 @@ const testHtml = `
 `;
 
 describe('Action Runner', () => {
+  let testDir;
   let testHtmlPath;
   
   beforeAll(async () => {
-    testHtmlPath = join(process.cwd(), 'test-story.html');
+    testDir = await mkdtemp(join(tmpdir(), 'passage-shell-runner-'));
+    testHtmlPath = join(testDir, 'test-story.html');
     await writeFile(testHtmlPath, testHtml);
   });
   
@@ -233,7 +236,7 @@ describe('Action Runner', () => {
   });
 
   test('should execute screenshot action', async () => {
-    const screenshotPath = join(process.cwd(), 'test-screenshot.png');
+    const screenshotPath = join(testDir, 'test-screenshot.png');
     const actions = [
       { type: 'screenshot', path: screenshotPath, description: 'Take screenshot' }
     ];
@@ -376,5 +379,64 @@ describe('Action Runner', () => {
     
     expect(results.length).toBeGreaterThan(0);
     expect(results[0].action).toBe('getText');
+  });
+
+  test('should emit events through the onEvent callback', async () => {
+    const events = [];
+    const actions = [
+      { type: 'getText', selector: '#story', description: 'Get story text' }
+    ];
+
+    await runActions(testHtmlPath, actions, {
+      onEvent: (event) => events.push(event)
+    });
+
+    expect(events.length).toBeGreaterThan(0);
+    expect(events.every((event) => typeof event.at === 'string')).toBe(true);
+    expect(events.some((event) => event.type === 'action-start')).toBe(true);
+    expect(events.some((event) => event.type === 'action-success')).toBe(true);
+  });
+
+  test('runActionsDetailed should return results on success', async () => {
+    const actions = [
+      { type: 'getText', selector: '#story', description: 'Get story text' },
+      { type: 'getLinks', description: 'Get links' }
+    ];
+
+    const run = await runActionsDetailed(testHtmlPath, actions);
+
+    expect(run.error).toBeUndefined();
+    expect(run.results).toHaveLength(2);
+    expect(run.results[0].action).toBe('getText');
+  });
+
+  test('runActionsDetailed should return partial results and error details on failure', async () => {
+    const events = [];
+    const actions = [
+      { type: 'getText', selector: '#story', description: 'Get story text' },
+      { type: 'unknownAction', description: 'Unsupported action that fails fast' },
+      { type: 'getText', selector: '#story', description: 'Should not run' }
+    ];
+
+    const run = await runActionsDetailed(testHtmlPath, actions, {
+      onEvent: (event) => events.push(event)
+    });
+
+    // The first action succeeds, the second fails and halts the loop.
+    expect(run.results).toHaveLength(1);
+    expect(run.results[0].action).toBe('getText');
+    expect(run.error).toBeDefined();
+    expect(run.error.index).toBe(1);
+    expect(run.error.action).toBe('unknownAction');
+    expect(run.error.message).toContain('Unknown action type');
+    expect(events.some((event) => event.type === 'action-error')).toBe(true);
+  });
+
+  test('runActionsDetailed should throw for non-existent file', async () => {
+    const actions = [{ type: 'getText', selector: 'body' }];
+
+    await expect(
+      runActionsDetailed('/non/existent/file.html', actions)
+    ).rejects.toThrow('HTML file not found');
   });
 }, 30000); // Increase timeout for browser operations

@@ -1,6 +1,6 @@
 {
   "name": "passage-shell",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "CLI tool for automated testing of HTML-based interactive fiction projects.",
   "type": "module",
   "main": "src/runner.js",
@@ -33,19 +33,20 @@
     "node": ">=18.0.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^6.0.2",
     "@babel/core": "^8.0.1",
     "@babel/preset-env": "^8.0.2",
     "@eslint/js": "^10.0.1",
-    "electron": "^42.4.1",
-    "eslint": "^10.5.0",
-    "eslint-plugin-jsdoc": "^63.0.7",
-    "globals": "^17.6.0",
+    "@vitejs/plugin-react": "^6.0.3",
+    "electron": "^42.5.0",
+    "eslint": "^10.6.0",
+    "eslint-plugin-jsdoc": "^63.0.10",
+    "globals": "^17.7.0",
     "jest": "^30.4.2",
-    "vite": "^8.0.16"
+    "supertest": "^7.2.2",
+    "vite": "^8.1.0"
   },
   "dependencies": {
-    "@playwright/test": "^1.61.0",
+    "@playwright/test": "^1.61.1",
     "commander": "^15.0.0",
     "express": "^5.2.1",
     "multer": "^2.2.0",

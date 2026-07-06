@@ -39,7 +39,7 @@
     "@vitejs/plugin-react": "^6.0.3",
     "electron": "^42.5.0",
     "eslint": "^10.6.0",
-    "eslint-plugin-jsdoc": "^63.0.10",
+    "eslint-plugin-jsdoc": "^63.0.12",
     "globals": "^17.7.0",
     "jest": "^30.4.2",
     "supertest": "^7.2.2",

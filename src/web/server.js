@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import { mkdtemp, mkdir, writeFile } from 'fs/promises';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { basename, extname, join, resolve } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath } from 'url';
@@ -291,6 +291,16 @@ app.get('/api/runs/:runId/screenshots/:shotId', (req, res) => {
 });
 
 if (existsSync(webDistDir)) {
+  const indexFilePath = join(webDistDir, 'index.html');
+  let cachedIndexHtml = null;
+  let hasWarnedMissingIndex = false;
+
+  try {
+    cachedIndexHtml = readFileSync(indexFilePath, 'utf8');
+  } catch (error) {
+    console.warn(`Unable to load index.html from ${indexFilePath}. SPA fallback will be unavailable.`, error);
+  }
+
   app.use(express.static(webDistDir));
 
   app.use((req, res, next) => {
@@ -302,7 +312,16 @@ if (existsSync(webDistDir)) {
       return next();
     }
 
-    return res.sendFile(join(webDistDir, 'index.html'));
+    if (!cachedIndexHtml) {
+      if (!hasWarnedMissingIndex) {
+        console.warn('SPA fallback unavailable: index.html was not loaded at startup.');
+        hasWarnedMissingIndex = true;
+      }
+
+      return next();
+    }
+
+    return res.type('text/html').send(cachedIndexHtml);
   });
 }
 

@@ -296,7 +296,9 @@ if (existsSync(webDistDir)) {
 
   try {
     indexFileContents = readFileSync(indexFilePath, 'utf8');
-  } catch {}
+  } catch (error) {
+    console.warn('Unable to load dist/web/index.html at startup.', error);
+  }
 
   app.use(express.static(webDistDir));
 
@@ -313,7 +315,7 @@ if (existsSync(webDistDir)) {
       return next();
     }
 
-    return res.type('html').send(indexFileContents);
+    return res.type('text/html').send(indexFileContents);
   });
 }
 

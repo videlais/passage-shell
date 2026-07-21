@@ -292,7 +292,11 @@ app.get('/api/runs/:runId/screenshots/:shotId', (req, res) => {
 
 if (existsSync(webDistDir)) {
   const indexFilePath = join(webDistDir, 'index.html');
-  const indexFileContents = existsSync(indexFilePath) ? readFileSync(indexFilePath) : null;
+  let indexFileContents = null;
+
+  try {
+    indexFileContents = readFileSync(indexFilePath, 'utf8');
+  } catch {}
 
   app.use(express.static(webDistDir));
 

@@ -292,12 +292,13 @@ app.get('/api/runs/:runId/screenshots/:shotId', (req, res) => {
 
 if (existsSync(webDistDir)) {
   const indexFilePath = join(webDistDir, 'index.html');
-  let indexFileContents = null;
+  let cachedIndexHtml = null;
+  let hasWarnedMissingIndex = false;
 
   try {
-    indexFileContents = readFileSync(indexFilePath, 'utf8');
+    cachedIndexHtml = readFileSync(indexFilePath, 'utf8');
   } catch (error) {
-    console.warn('Unable to load dist/web/index.html at startup.', error);
+    console.warn(`Unable to load index.html from ${indexFilePath}. SPA fallback will be unavailable.`, error);
   }
 
   app.use(express.static(webDistDir));
@@ -311,11 +312,16 @@ if (existsSync(webDistDir)) {
       return next();
     }
 
-    if (!indexFileContents) {
+    if (!cachedIndexHtml) {
+      if (!hasWarnedMissingIndex) {
+        console.warn('SPA fallback unavailable: index.html was not loaded at startup.');
+        hasWarnedMissingIndex = true;
+      }
+
       return next();
     }
 
-    return res.type('text/html').send(indexFileContents);
+    return res.type('text/html').send(cachedIndexHtml);
   });
 }
 

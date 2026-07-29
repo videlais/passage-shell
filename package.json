@@ -40,7 +40,7 @@
     "electron": "^43.2.0",
     "eslint": "^10.7.0",
     "eslint-plugin-jsdoc": "^63.2.0",
-    "globals": "^17.7.0",
+    "globals": "^17.8.0",
     "jest": "^30.4.2",
     "supertest": "^7.2.2",
     "vite": "^8.1.5"

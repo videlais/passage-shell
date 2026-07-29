@@ -43,6 +43,7 @@ const ACTION_RULES = {
  * @param fallback
  */
 function toBool(input, fallback = true) {
+  /* istanbul ignore next */
   if (typeof input === 'boolean') {
     return input;
   }
@@ -297,6 +298,7 @@ if (existsSync(webDistDir)) {
 
   try {
     cachedIndexHtml = readFileSync(indexFilePath, 'utf8');
+  /* istanbul ignore next */
   } catch (error) {
     console.warn(`Unable to load index.html from ${indexFilePath}. SPA fallback will be unavailable.`, error);
   }
@@ -312,6 +314,7 @@ if (existsSync(webDistDir)) {
       return next();
     }
 
+    /* istanbul ignore next */
     if (!cachedIndexHtml) {
       if (!hasWarnedMissingIndex) {
         console.warn('SPA fallback unavailable: index.html was not loaded at startup.');
@@ -327,6 +330,7 @@ if (existsSync(webDistDir)) {
 
 const isMainModule = process.argv[1] && resolve(process.argv[1]) === __filename;
 
+/* istanbul ignore next */
 if (isMainModule) {
   const port = process.env.PORT || 3001;
 

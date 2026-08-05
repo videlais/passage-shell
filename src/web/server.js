@@ -16,6 +16,10 @@ const webDistDir = resolve(projectRoot, 'dist', 'web');
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 const runStore = new Map();
+const screenshotRequestStore = new Map();
+
+const SCREENSHOT_RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const SCREENSHOT_RATE_LIMIT_MAX_REQUESTS = 60;
 
 const ACTION_RULES = {
   click: ['selector'],
@@ -176,6 +180,26 @@ function normalizeScreenshotActions(actions, screenshotsDir) {
   };
 }
 
+/**
+ *
+ * @param runId
+ * @param now
+ */
+function isScreenshotRequestAllowed(runId, now = Date.now()) {
+  const recentWindowStart = now - SCREENSHOT_RATE_LIMIT_WINDOW_MS;
+  const priorRequests = screenshotRequestStore.get(runId) || [];
+  const recentRequests = priorRequests.filter((timestamp) => timestamp > recentWindowStart);
+
+  if (recentRequests.length >= SCREENSHOT_RATE_LIMIT_MAX_REQUESTS) {
+    screenshotRequestStore.set(runId, recentRequests);
+    return false;
+  }
+
+  recentRequests.push(now);
+  screenshotRequestStore.set(runId, recentRequests);
+  return true;
+}
+
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
@@ -280,6 +304,10 @@ app.get('/api/runs/:runId/screenshots/:shotId', (req, res) => {
 
   if (!run) {
     return res.status(404).json({ error: 'Run not found.' });
+  }
+
+  if (!isScreenshotRequestAllowed(runId)) {
+    return res.status(429).json({ error: 'Too many screenshot requests. Please try again later.' });
   }
 
   const screenshot = run.screenshots.find((item) => item.id === shotId);

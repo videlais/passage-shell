@@ -230,5 +230,20 @@ describe('Web server API', () => {
       expect(res.status).toBe(404);
       expect(res.body.error).toMatch(/screenshot not found/i);
     });
+
+    test('rate limits repeated screenshot downloads for the same run', async () => {
+      const body = await runWithScreenshot();
+      const screenshotUrl = body.screenshots[0].url;
+
+      for (let index = 0; index < 60; index += 1) {
+        const res = await request(app).get(screenshotUrl);
+        expect(res.status).toBe(200);
+      }
+
+      const limited = await request(app).get(screenshotUrl);
+
+      expect(limited.status).toBe(429);
+      expect(limited.body.error).toMatch(/too many screenshot requests/i);
+    });
   });
 });

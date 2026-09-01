@@ -37,7 +37,7 @@
     "@babel/preset-env": "^8.0.2",
     "@eslint/js": "^10.0.1",
     "@vitejs/plugin-react": "^6.1.1",
-    "electron": "^43.2.0",
+    "electron": "^44.0.0",
     "eslint": "^10.8.0",
     "eslint-plugin-jsdoc": "^63.3.2",
     "globals": "^17.11.0",

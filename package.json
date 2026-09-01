@@ -46,7 +46,7 @@
     "vite": "^8.1.5"
   },
   "dependencies": {
-    "@playwright/test": "^1.62.0",
+    "@playwright/test": "^1.62.1",
     "commander": "^15.0.0",
     "express": "^5.2.1",
     "multer": "^2.2.0",

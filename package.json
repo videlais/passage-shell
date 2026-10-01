@@ -41,7 +41,7 @@
     "eslint": "^10.9.1",
     "eslint-plugin-jsdoc": "^64.2.1",
     "globals": "^17.11.0",
-    "jest": "^30.5.0",
+    "jest": "^30.5.2",
     "supertest": "^7.2.2",
     "vite": "^8.2.2"
   },

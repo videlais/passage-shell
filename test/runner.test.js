@@ -132,6 +132,12 @@ describe('Action Runner', () => {
     expect(results[0].result.waited).toBe(100);
   });
 
+  test('should honor a zero-millisecond wait', async () => {
+    const results = await runActions(testHtmlPath, [{ type: 'wait', ms: 0 }]);
+
+    expect(results[0].result.waited).toBe(0);
+  });
+
   test('should execute getHTML action', async () => {
     const actions = [
       { type: 'getHTML', selector: '#story', description: 'Get story HTML' }

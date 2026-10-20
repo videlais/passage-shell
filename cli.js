@@ -1,11 +1,23 @@
 #!/usr/bin/env node
 
-import { Command } from 'commander';
+import { Command, InvalidArgumentError } from 'commander';
 import { readFile } from 'fs/promises';
 import { resolve } from 'path';
 import { runActions } from './src/runner.js';
 
 const program = new Command();
+
+function parseBoolean(value) {
+  if (value === 'true') {
+    return true;
+  }
+
+  if (value === 'false') {
+    return false;
+  }
+
+  throw new InvalidArgumentError('Expected "true" or "false".');
+}
 
 program
   .name('passage-shell')
@@ -15,7 +27,7 @@ program
 program
   .command('run <html-file> <actions-file>')
   .description('Run automated actions on an HTML file')
-  .option('-h, --headless', 'Run in headless mode', true)
+  .option('-h, --headless <boolean>', 'Run in headless mode (true or false)', parseBoolean, true)
   .option('-s, --slow-mo <ms>', 'Slow down operations by specified milliseconds', '0')
   .option('-o, --output <file>', 'Save results to JSON file')
   .option('-v, --verbose', 'Show detailed output')

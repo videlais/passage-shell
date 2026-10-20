@@ -204,8 +204,8 @@ async function executeAction(page, action, verbose = false) {
       return { links };
       
     case 'wait':
-      await page.waitForTimeout(action.ms || 1000);
-      return { waited: action.ms || 1000 };
+      await page.waitForTimeout(action.ms ?? 1000);
+      return { waited: action.ms ?? 1000 };
       
     case 'waitForSelector':
       await page.waitForSelector(action.selector, { 

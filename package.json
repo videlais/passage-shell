@@ -36,7 +36,7 @@
     "node": ">=18.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^8.0.6",
+    "@babel/core": "^8.0.9",
     "@babel/preset-env": "^8.0.6",
     "@eslint/js": "^10.0.1",
     "@vitejs/plugin-react": "^6.1.1",
